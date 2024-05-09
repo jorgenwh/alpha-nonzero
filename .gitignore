@@ -34,3 +34,4 @@
 # Python
 venv/
 training/venv/
+training/data/*
