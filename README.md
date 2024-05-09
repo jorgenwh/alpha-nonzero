@@ -1,6 +1,6 @@
 # Alpha-NonZero
 
-<p align="center"><img src="assets/aichess.png" width="66%"></p>
+<p align="center"><img src="assets/aichess.png" width="50%"></p>
 
 ## Development plan
 
