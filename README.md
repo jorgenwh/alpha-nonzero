@@ -1,5 +1,7 @@
 # Alpha-NonZero
 
+<p align="center"><img src="assets/aichess.png" width="66%"></p>
+
 ## Development plan
 
 ### Experimental (Python)
