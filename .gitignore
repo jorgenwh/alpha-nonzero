@@ -37,3 +37,4 @@ training/venv/
 training/data/*
 training/test_data/test.pgn
 training/test_data/fens.fen
+training/stockfish/*

@@ -35,11 +35,10 @@ def fen_to_fixed_length_fen(fen: str) -> str:
     flfen += castling
 
     ep_sq = board.ep_square
-
     if ep_sq is not None:
         flfen += chess.SQUARE_NAMES[ep_sq]
     else:
-        flfen += "."
+        flfen += ".."
 
     halfmove_clock = str(board.halfmove_clock)
     if len(halfmove_clock) == 1:
@@ -59,12 +58,12 @@ def fen_to_fixed_length_fen(fen: str) -> str:
     else:
         raise ValueError("fullmove clock is not 1, 2 or 3 digits long")
 
-    assert len(flfen) == 76
+    assert len(flfen) == 76, f"fixed-length fen is not 76 characters long: {flfen}"
     return flfen
 
 
 if __name__ == "__main__":
-    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq e3 0 1"
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     fixed_length_fen = fen_to_fixed_length_fen(fen)
 
     print(f"original fen: {fen}")

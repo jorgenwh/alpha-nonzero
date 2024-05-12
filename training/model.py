@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-
 from pytorch_model_summary import summary
+from utils import fen_to_fixed_length_fen
+from policy_index import policy_index
 
 
 class Attention(nn.Module):
@@ -14,7 +14,7 @@ class Attention(nn.Module):
 
         self.c_attn = nn.Linear(d_model, 3*d_model)
         self.c_proj = nn.Linear(d_model, d_model)
-        self.mask = torch.tril(torch.ones(block_size, block_size)).view(1, 1, block_size, block_size).to(device)
+        #self.mask = torch.tril(torch.ones(block_size, block_size)).view(1, 1, block_size, block_size).to(device)
 
     def forward(self, x):
         B, L, D = x.shape
@@ -26,7 +26,7 @@ class Attention(nn.Module):
 
         att = torch.matmul(q, k.transpose(2, 3))
         att = att / (k.shape[-1] ** 0.5)
-        att = att.masked_fill(self.mask[:, :, :L, :L] == 0, -1e9)
+        #att = att.masked_fill(self.mask[:, :, :L, :L] == 0, -1e9)
         att = F.softmax(att, dim=3)
         att = torch.matmul(att, v)
 
@@ -70,12 +70,20 @@ class Block(nn.Module):
         return x
 
 
-class ByteTransformer(nn.Module):
-    def __init__(self, block_size, d_model, n_heads, n_blocks, device='cpu'):
+class Transformer(nn.Module):
+    def __init__(self, 
+                 vocab_size, 
+                 policy_size, 
+                 block_size, 
+                 d_model, 
+                 n_heads, 
+                 n_blocks, 
+                 device='cpu'
+    ):
         super().__init__()
         self.device = device
 
-        self.input_embedding = nn.Embedding(256, d_model)
+        self.input_embedding = nn.Embedding(vocab_size, d_model)
         self.positional_encoding = nn.Embedding(block_size, d_model)
 
         self.blocks = nn.Sequential(
@@ -88,7 +96,7 @@ class ByteTransformer(nn.Module):
         )
 
         self.ln = nn.LayerNorm(d_model)
-        self.fc = nn.Linear(d_model, 256)
+        self.fc = nn.Linear(d_model, policy_size)
 
     def forward(self, x):
         B, L = x.shape
@@ -106,15 +114,33 @@ class ByteTransformer(nn.Module):
 
 
 if __name__ == '__main__':
-    BATCH_SIZE = 1
-    BLOCK_SIZE = 256
-    D_MODEL = 512
-    N_HEADS = 8
-    N_BLOCKS = 6
-    VOCAB_SIZE = 256
-    x = torch.randint(VOCAB_SIZE, size=(BATCH_SIZE, BLOCK_SIZE))
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    print(f"original fen: {fen}")
+    flfen = fen_to_fixed_length_fen(fen)
+    print(f"fixed length fen: {flfen}")
+
+    vocab = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
+    vocab_size = len(vocab)
+    block_size = 76
+    d_model = 512
+    n_heads = 8
+    n_blocks = 6
+    batch_size = 1
+    policy_size = len(policy_index) # 1858
+
+    x = torch.randint(vocab_size, size=(batch_size, block_size))
+    model = Transformer(
+        vocab_size=vocab_size,
+        policy_size=policy_size,
+        block_size=block_size,
+        d_model=d_model,
+        n_heads=n_heads,
+        n_blocks=n_blocks,
+        device='cpu',
+    )
+
     print("Forwarding input of shape: " + str(list(x.shape)))
-    model = ByteTransformer(block_size=BLOCK_SIZE, d_model=D_MODEL, n_heads=N_HEADS, n_blocks=N_BLOCKS)
     model(x)
     print("Forward pass successful")
+
     print(summary(model, x))
