@@ -47,7 +47,7 @@ namespace {
 #if !defined(_MSC_VER) && !defined(NNUE_EMBEDDING_OFF)
 //INCBIN(EmbeddedNNUEBig, EvalFileDefaultNameBig);
 //INCBIN(EmbeddedNNUESmall, EvalFileDefaultNameSmall);
-INCBIN(EmbeddedNNUEBig, "/home/jorgen/projects/alpha-nonzero/training/stockfish-package/nn-ae6a388e4a1a.nnue");
+INCBIN(EmbeddedNNUEBig, "/home/jorgen/projects/alpha-nonzero/training/stockfish-package/nn-c721dfca8cd3.nnue");
 INCBIN(EmbeddedNNUESmall, "/home/jorgen/projects/alpha-nonzero/training/stockfish-package/nn-baff1ede1f90.nnue");
 #else
 const unsigned char        gEmbeddedNNUEBigData[1]   = {0x0};
@@ -253,10 +253,12 @@ void Network<Arch, Transformer>::verify(std::string evalfilePath) const {
     }
 
     size_t size = sizeof(*featureTransformer) + sizeof(*network) * LayerStacks;
+    /*
     sync_cout << "info string NNUE evaluation using " << evalfilePath << " ("
               << size / (1024 * 1024) << "MiB, (" << featureTransformer->InputDimensions << ", "
               << network[0]->TransformedFeatureDimensions << ", " << network[0]->FC_0_OUTPUTS
               << ", " << network[0]->FC_1_OUTPUTS << ", 1))" << sync_endl;
+    */
 }
 
 

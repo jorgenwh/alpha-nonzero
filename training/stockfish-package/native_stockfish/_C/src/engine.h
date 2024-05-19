@@ -89,6 +89,10 @@ class Engine {
     void        flip();
     std::string visualize() const;
 
+    Color side_to_move() const {
+      return pos.side_to_move();
+    }
+
    private:
     const std::string binaryDirectory;
 

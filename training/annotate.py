@@ -1,7 +1,7 @@
 import math
 import chess
+import chess.engine
 from tqdm import tqdm
-from stockfish import Stockfish
 from policy_index import policy_index
 
 
@@ -22,27 +22,23 @@ def eval_to_annotation(eval: list()) -> list():
 
     return annotation
 
-def annotate_position(stockfish: Stockfish, fen: str) -> list():
-    stockfish.set_fen_position(fen)
-    legal_moves = [str(move) for move in chess.Board(fen).legal_moves]
-    evals = stockfish.get_top_moves(len(legal_moves))
-    annotation = eval_to_annotation(evals)
+def annotate_position(engine, fen):
+    board = chess.Board(fen)
+    info = engine.analyse(board, chess.engine.Limit(time=0.5))
+    print(info)
+
+    #annotation = eval_to_annotation(info["score"])
+    annotation = None
     return annotation
 
 
-def annotate_positions(fens: list()) -> list():
+def annotate_positions(fens):
     stockfish_path = "/home/jorgen/projects/alpha-nonzero/training/stockfish/stockfish-ubuntu-x86-64-avx2"
-    stockfish_params = {
-        "Threads": 4,
-        #"Hash": 8192,   # MB of hash table
-        #"UCI_LimitStrength": 'true',
-        #"UCI_Elo": 2500,
-    }
-    stockfish = Stockfish(stockfish_path, parameters=stockfish_params)
+    engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
     annotations = []
     bar = tqdm(fens)
     for fen in bar:
-        annotation = annotate_position(stockfish, fen)
+        annotation = annotate_position(engine, fen)
         annotations.append(annotation)
     return annotations
 

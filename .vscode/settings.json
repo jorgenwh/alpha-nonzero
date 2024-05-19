@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "condition_variable": "cpp",
+    "future": "cpp",
+    "mutex": "cpp",
+    "shared_mutex": "cpp",
+    "string_view": "cpp",
+    "random": "cpp"
+  }
+}
