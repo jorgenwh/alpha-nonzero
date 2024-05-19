@@ -1,2 +1,0 @@
-native_stockfish
-native_stockfish_C
