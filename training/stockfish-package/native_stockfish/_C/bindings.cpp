@@ -48,8 +48,7 @@ public:
   StockfishWrapper() {
     Bitboards::init();
     Position::init();
-    engine = new Engine("/home/jorgen/projects/alpha-nonzero/training/stockfish/stockfish-ubuntu-x86-64-avx2");
-
+    engine = new Engine("");
     auto& options = engine->get_options();
 
     options["Debug Log File"] << Option("", [](const Option& o) { start_logger(o); });
@@ -74,10 +73,11 @@ public:
     options["EvalFileSmall"] << Option(EvalFileDefaultNameSmall,
                                        [this](const Option& o) { engine->load_small_network(o); });
 
-
     engine->load_networks();
     engine->resize_threads();
     engine->search_clear();  // After threads are up
+
+    std::cout << engine_info() << std::endl;
   }
   ~StockfishWrapper() { }
 
@@ -88,6 +88,7 @@ public:
     limits.startTime = now();
     limits.depth = 15;
 
+    std::cout << "go called" << std::endl;
     engine->go(limits);
   }
 
