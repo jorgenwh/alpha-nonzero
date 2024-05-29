@@ -31,10 +31,12 @@ def annotate_position(engine, fen):
     annotation = None
     return annotation
 
-
 def annotate_positions(fens):
     stockfish_path = "/home/jorgen/projects/alpha-nonzero/training/stockfish/stockfish-ubuntu-x86-64-avx2"
     engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+    print(engine.options)
+
+    exit()
     annotations = []
     bar = tqdm(fens)
     for fen in bar:

@@ -1,14 +1,12 @@
-import time
-from native_stockfish import get_stockfish
+from native_stockfish import Stockfish
 
-stockfish = get_stockfish()
+FEN = "rnbqk1r1/pp3p1p/4pn1Q/2p5/3Pp3/P1P5/2P2PPP/R1B1KBNR w KQq - 0 1"
+THINK_TIME = 1
 
-stockfish.set_position("r1bq1b1r/p2k1ppp/n1p1pn2/3p4/3P4/4PN1P/PPP2PP1/RNBQK2R w KQ - 0 8")
-stockfish.visualize()
+stockfish = Stockfish()
+stockfish.set_option("Threads", 1)
+stockfish.search(THINK_TIME)
 
-stockfish.go()
-time.sleep(5)
-stockfish.stop()
 
-v = stockfish.get_score()
-print(v)
+#stockfish.set_option("Threads", 12)
+#stockfish.search(THINK_TIME)

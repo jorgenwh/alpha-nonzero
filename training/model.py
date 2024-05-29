@@ -14,7 +14,6 @@ class Attention(nn.Module):
 
         self.c_attn = nn.Linear(d_model, 3*d_model)
         self.c_proj = nn.Linear(d_model, d_model)
-        #self.mask = torch.tril(torch.ones(block_size, block_size)).view(1, 1, block_size, block_size).to(device)
 
     def forward(self, x):
         B, L, D = x.shape
@@ -26,7 +25,6 @@ class Attention(nn.Module):
 
         att = torch.matmul(q, k.transpose(2, 3))
         att = att / (k.shape[-1] ** 0.5)
-        #att = att.masked_fill(self.mask[:, :, :L, :L] == 0, -1e9)
         att = F.softmax(att, dim=3)
         att = torch.matmul(att, v)
 

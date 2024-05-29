@@ -34,7 +34,7 @@ struct CaseInsensitiveLess {
 class Option;
 
 class OptionsMap {
-   public:
+  public:
     void setoption(std::istringstream&);
 
     friend std::ostream& operator<<(std::ostream&, const OptionsMap&);

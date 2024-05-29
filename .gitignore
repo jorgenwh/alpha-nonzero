@@ -44,3 +44,4 @@ training/test_data/test.pgn
 training/test_data/fens.fen
 training/stockfish/stockfish-ubuntu-x86-64-avx2
 *avx2
+.vscode/

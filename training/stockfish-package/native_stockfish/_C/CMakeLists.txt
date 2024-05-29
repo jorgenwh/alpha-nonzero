@@ -5,27 +5,18 @@ project(native_stockfish_C LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # CXX flags
-set(CMAKE_CXX_FLAGS "-O3 -march=native -pthread")
-
-#configure_file(
-#  ${CMAKE_SOURCE_DIR}/nn-ae6a388e4a1a.nnue
-#  ${CMAKE_BINARY_DIR}/nn-ae6a388e4a1a.nnue
-#  COPYONLY
-#)
-
-#configure_file(
-#  ${CMAKE_SOURCE_DIR}/nn-baff1ede1f90.nnue
-#  ${CMAKE_BINARY_DIR}/nn-baff1ede1f90.nnue
-#  COPYONLY
-#)
+#set(CMAKE_CXX_FLAGS "-pthread -mavx2 -mpopcnt -msse3 -mavx512f -mavx512bw")
+set(CMAKE_CXX_FLAGS "-pthread -O3 -funroll-loops -msse -mmmx -msse2 -msse3 -msse4.1 -mavx2 -mavx512 -mavx512bw -mavx512vnni")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-# static link libstdc++ where i choose where from
-#set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+# add definitions
+#add_compile_definitions(USE_AVX2)
+add_compile_definitions(USE_AVX512)
+add_compile_definitions(USE_POPCNT)
+add_compile_definitions(USE_PREFETCH)
+add_compile_definitions(IS_64BIT)
 
-
-# set sources
 set(SOURCES
     src/benchmark.cpp 
     src/bitboard.cpp 
@@ -47,6 +38,7 @@ set(SOURCES
     src/nnue/network.cpp 
     src/engine.cpp 
     src/score.cpp
+    sfwrapper.cpp
 )
 
 pybind11_add_module(${PROJECT_NAME} ${SOURCES} "bindings.cpp")

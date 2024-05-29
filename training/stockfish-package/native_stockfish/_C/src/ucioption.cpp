@@ -49,10 +49,12 @@ void OptionsMap::setoption(std::istringstream& is) {
     while (is >> token)
         value += (value.empty() ? "" : " ") + token;
 
-    if (options_map.count(name))
+    if (options_map.count(name)) 
         options_map[name] = value;
     else
         sync_cout << "No such option: " << name << sync_endl;
+
+    std::cout << this << "\n";
 }
 
 Option OptionsMap::operator[](const std::string& name) const {
@@ -171,10 +173,10 @@ std::ostream& operator<<(std::ostream& os, const OptionsMap& om) {
                 os << "\noption name " << it.first << " type " << o.type;
 
                 if (o.type == "string" || o.type == "check" || o.type == "combo")
-                    os << " default " << o.defaultValue;
+                    os << " current " << o.currentValue << " default " << o.defaultValue;
 
                 if (o.type == "spin")
-                    os << " default " << int(stof(o.defaultValue)) << " min " << o.min << " max "
+                    os << " current " << o.currentValue << " default " << int(stof(o.defaultValue)) << " min " << o.min << " max "
                        << o.max;
 
                 break;
