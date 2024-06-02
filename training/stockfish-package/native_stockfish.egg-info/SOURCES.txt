@@ -1,9 +1,0 @@
-pyproject.toml
-setup.py
-native_stockfish/__init__.py
-native_stockfish/stockfish.py
-native_stockfish.egg-info/PKG-INFO
-native_stockfish.egg-info/SOURCES.txt
-native_stockfish.egg-info/dependency_links.txt
-native_stockfish.egg-info/not-zip-safe
-native_stockfish.egg-info/top_level.txt
