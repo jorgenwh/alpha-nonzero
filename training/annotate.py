@@ -10,8 +10,7 @@ from pystockfish import Stockfish
 THREADS = 12
 HASH = 8192
 MULTI_PV = 256
-#NODES_PER_ANNOTATION = 2000000
-NODES_PER_ANNOTATION = 200000
+NODES_PER_ANNOTATION = 2000000
 
 
 def move_to_policy_index(move: str) -> int:
