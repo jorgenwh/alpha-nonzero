@@ -1,3 +1,4 @@
+import os
 import torch
 from tqdm import tqdm
 
@@ -21,6 +22,9 @@ END_BATCH_NUMBER   = 66121
 
 
 if __name__ == "__main__":
+    if not os.path.isdir(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
+
     positions, annotations = prepare_training_data(START_BATCH_NUMBER, END_BATCH_NUMBER)
 
     model = Transformer(
