@@ -218,8 +218,12 @@ policy_index = [
     "h2h1q", "h2h1r", "h2h1b",
     "a7a8n", "a7b8n", "b7b8n", "b7a8n", "b7c8n", "c7b8n", "c7c8n",
     "c7d8n", "d7c8n", "d7d8n", "d7e8n", "e7d8n", "e7e8n", "e7f8n", "f7e8n",
-    "f7f8n", "f7g8n", "g7f8n", "g7g8n", "g7h8n", "h7f8n", "h7h8n",
+    "f7f8n", "f7g8n", "g7f8n", "g7g8n", "g7h8n", "h7g8n", "h7h8n",
     "a2a1n", "a2b1n", "b2b1n", "b2a1n", "b2c1n", "c2b1n", "c2c1n",
     "c2d1n", "d2c1n", "d2d1n", "d2e1n", "e2d1n", "e2e1n", "e2f1n", "f2e1n",
-    "f2f1n", "f2g1n", "g2f1n", "g2g1n", "g2h1n", "h2f1n", "h2h1n",
+    "f2f1n", "f2g1n", "g2f1n", "g2g1n", "g2h1n", "h2g1n", "h2h1n",
 ]
+
+
+if __name__ == "__main__":
+    print(len(policy_index))

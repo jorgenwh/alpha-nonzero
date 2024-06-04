@@ -7,7 +7,7 @@ from policy_index import policy_index
 from pystockfish import Stockfish
 
 
-THREADS = 12
+THREADS = 5
 HASH = 8192
 MULTI_PV = 256
 NODES_PER_ANNOTATION = 2000000
@@ -50,7 +50,7 @@ def annotate_positions(fens, annotations, engine: Stockfish):
 
 if __name__ == "__main__":
     batch_number = sys.argv[1]
-    batch_size = 50
+    batch_size = 1000
 
     training_data_dir = "training_data"
     input_batch_name = f"fen_batch_{batch_number}.fen"

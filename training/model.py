@@ -108,7 +108,7 @@ class Transformer(nn.Module):
         x = self.ln(x)
         x = self.fc(x)
 
-        return x
+        return x[:,-1,:]
 
 
 if __name__ == '__main__':

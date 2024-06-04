@@ -1,4 +1,17 @@
+import numpy as np
+import torch
 import chess
+from policy_index import policy_index
+
+
+VOCAB          = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
+VOCAB_SIZE     = len(VOCAB)
+BLOCK_SIZE     = 76
+POLICY_SIZE    = len(policy_index)
+
+CHAR_TO_IDX    = {c:i for i, c in enumerate(VOCAB)}
+IDX_TO_CHAR    = {i:c for i, c in enumerate(VOCAB)}
+
 
 def fen_to_fixed_length_fen(fen: str) -> str:
     # ----------------------------------------------------------
@@ -46,7 +59,7 @@ def fen_to_fixed_length_fen(fen: str) -> str:
     elif len(halfmove_clock) == 2:
         flfen += halfmove_clock
     else:
-        raise ValueError("halfmove clock is not 1 or 2 digits long")
+        raise ValueError(f"halfmove clock is not 1 or 2 digits long. fen: {fen}")
 
     fullmove_clock = str(board.fullmove_number)
     if len(fullmove_clock) == 1:
@@ -60,6 +73,57 @@ def fen_to_fixed_length_fen(fen: str) -> str:
 
     assert len(flfen) == 76, f"fixed-length fen is not 76 characters long: {flfen}"
     return flfen
+
+def _prepare_batch(batch_num):
+    f = open(f"training_data/fen_batch_{batch_num}.fen")
+    fens = [fen for fen in f]
+    flfens = [fen_to_fixed_length_fen(fen) for fen in fens]
+    f.close()
+
+    positions = torch.zeros((len(flfens), 76), dtype=torch.int64)
+    for i, flfen in enumerate(flfens):
+        positions[i] = torch.tensor([CHAR_TO_IDX[c] for c in flfen])
+    annotations = torch.tensor(np.load(f"training_data/annotation_batch_{batch_num}.anno.npy"))
+
+    assert positions.dtype == torch.int64
+    assert annotations.dtype == torch.float32
+
+    return positions, annotations
+
+def prepare_training_data(sbn, ebn):
+    batches = ebn - sbn
+    print(f"Preparing batches... batch 0/{batches}", end="\r", flush=True)
+
+    positions = torch.zeros(size=(batches*1000, 76), dtype=torch.int64)
+    annotations = torch.zeros(size=(batches*1000, 1968), dtype=torch.float32)
+
+    for idx, i in enumerate(range(sbn, ebn+1)):
+        pos, annos = _prepare_batch(i)
+        s = idx*1000
+        e = (idx + 1)*1000
+        positions[s:e] = pos
+        annotations[s:e] = annos
+        print(f"Preparing batches... batch {idx+1}/{batches}", end="\r", flush=True)
+    print(f"Preparing batches... batch {batches}/{batches}")
+
+    return positions, annotations
+
+
+class AverageMeter():
+    def __init__(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def __repr__(self):
+        return f"{round(self.avg, 4)}"
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
 
 
 if __name__ == "__main__":

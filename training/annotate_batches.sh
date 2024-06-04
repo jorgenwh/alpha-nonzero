@@ -1,7 +1,7 @@
 #!/bin/bash
 
-START_BATCH=6
-END_BATCH=10
+START_BATCH=66002
+END_BATCH=100000
 
 for ((i=START_BATCH; i<=END_BATCH; i++))
 do
