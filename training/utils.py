@@ -91,7 +91,7 @@ def _prepare_batch(batch_num):
     return positions, annotations
 
 def prepare_training_data(sbn, ebn):
-    batches = ebn - sbn
+    batches = (ebn - sbn) + 1
     print(f"Preparing batches... batch 0/{batches}", end="\r", flush=True)
 
     positions = torch.zeros(size=(batches*1000, 76), dtype=torch.int64)
