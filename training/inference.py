@@ -28,7 +28,7 @@ if __name__ == "__main__":
         n_blocks=N_BLOCKS,
         device=DEVICE,
     ).to(DEVICE)
-    model.load_state_dict(torch.load("model.pt"))
+    model.load_state_dict(torch.load("models/model_checkpoint_28000.pt"))
     model.eval()
 
     fen = sys.argv[1]

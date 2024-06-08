@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import torch
 import chess
@@ -5,8 +6,8 @@ from policy_index import policy_index
 
 
 VOCAB          = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
-VOCAB_SIZE     = len(VOCAB)
-BLOCK_SIZE     = 76
+VOCAB_SIZE     = len(VOCAB) + len(policy_index)
+BLOCK_SIZE     = 77
 POLICY_SIZE    = len(policy_index)
 
 CHAR_TO_IDX    = {c:i for i, c in enumerate(VOCAB)}
@@ -107,6 +108,15 @@ def prepare_training_data(sbn, ebn):
     print(f"Preparing batches... batch {batches}/{batches}")
 
     return positions, annotations
+
+def pickle_save(data: list, fn: str):
+    with open(fn, "wb") as f:
+        pickle.dump(data, f)
+
+def pickle_load(fn: str):
+    with open(fn, "rb") as f:
+        data = pickle.load(f)
+    return data
 
 
 class AverageMeter():
