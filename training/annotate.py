@@ -6,7 +6,7 @@ from utils import pickle_save
 from pystockfish import Stockfish
 
 
-THREADS = 5
+THREADS = 6
 HASH = 8192
 MULTI_PV = 256
 NODES_PER_ANNOTATION = 3000000
@@ -15,8 +15,12 @@ NODES_PER_ANNOTATION = 3000000
 def annotate(fens: list, engine: Stockfish, data: list):
     bar = tqdm(fens, desc="annotating", bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - data_points: {unit} - elapsed: {elapsed}")
     for fen in bar:
-        engine.clear_evaluations()
         engine.set_position(fen)
+
+        if engine.rule50_count() > 99:
+            continue
+
+        engine.clear_evaluations()
         engine.search(nodes=NODES_PER_ANNOTATION)
         eval = engine.get_evaluations()
 
@@ -40,7 +44,6 @@ def annotate(fens: list, engine: Stockfish, data: list):
 
 if __name__ == "__main__":
     batch_number = sys.argv[1]
-    batch_size = 1000
 
     training_data_dir = "training_data"
     input_batch_name = f"fen_batch_{batch_number}.fen"
@@ -56,4 +59,4 @@ if __name__ == "__main__":
 
     data = []
     annotate(fens, engine, data)
-    pickle_save(data, "training_data/training_batch_{batch_number}.pkl")
+    pickle_save(data, f"training_data/training_batch_{batch_number}.pkl")

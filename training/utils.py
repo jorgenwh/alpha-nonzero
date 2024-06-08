@@ -1,3 +1,4 @@
+from collections import deque
 import pickle
 import numpy as np
 import torch
@@ -8,6 +9,7 @@ from policy_index import policy_index
 VOCAB          = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
 VOCAB_SIZE     = len(VOCAB) + len(policy_index)
 BLOCK_SIZE     = 77
+OUTPUT_SIZE    = 1
 POLICY_SIZE    = len(policy_index)
 
 CHAR_TO_IDX    = {c:i for i, c in enumerate(VOCAB)}
@@ -75,39 +77,57 @@ def fen_to_fixed_length_fen(fen: str) -> str:
     assert len(flfen) == 76, f"fixed-length fen is not 76 characters long: {flfen}"
     return flfen
 
-def _prepare_batch(batch_num):
-    f = open(f"training_data/fen_batch_{batch_num}.fen")
-    fens = [fen for fen in f]
-    flfens = [fen_to_fixed_length_fen(fen) for fen in fens]
-    f.close()
+def get_batch(batch_num):
+    #data = pickle_load(f"training_data/training_batch_{batch_num}.pkl")
+    data = pickle_load("training_data/training_batch_{batch_number}.pkl")
 
-    positions = torch.zeros((len(flfens), 76), dtype=torch.int64)
-    for i, flfen in enumerate(flfens):
-        positions[i] = torch.tensor([CHAR_TO_IDX[c] for c in flfen])
-    annotations = torch.tensor(np.load(f"training_data/annotation_batch_{batch_num}.anno.npy"))
+    positions = deque()
+    targets = deque()
 
-    assert positions.dtype == torch.int64
-    assert annotations.dtype == torch.float32
+    for (fen, move, p_win) in data:
+        p_win = float(p_win)
+        assert isinstance(fen, str)
+        assert isinstance(move, str)
+        assert isinstance(p_win, float)
 
-    return positions, annotations
+        pos_vec = torch.zeros(BLOCK_SIZE, dtype=torch.int64)
+        flfen = fen_to_fixed_length_fen(fen)
+        for i, c in enumerate(flfen):
+            pos_vec[i] = CHAR_TO_IDX[c]
+        pos_vec[-1] = policy_index.index(move)
 
-def prepare_training_data(sbn, ebn):
+        positions.append(pos_vec)
+        targets.append(p_win)
+
+    return positions, targets
+    
+
+def prepare_training_data(sbn, ebn, max_data_points=5000):
     batches = (ebn - sbn) + 1
     print(f"Preparing batches... batch 0/{batches}", end="\r", flush=True)
 
-    positions = torch.zeros(size=(batches*1000, 76), dtype=torch.int64)
-    annotations = torch.zeros(size=(batches*1000, 1968), dtype=torch.float32)
+    positions = deque(maxlen=max_data_points)
+    targets = deque(maxlen=max_data_points)
 
     for idx, i in enumerate(range(sbn, ebn+1)):
-        pos, annos = _prepare_batch(i)
-        s = idx*1000
-        e = (idx + 1)*1000
-        positions[s:e] = pos
-        annotations[s:e] = annos
-        print(f"Preparing batches... batch {idx+1}/{batches}", end="\r", flush=True)
-    print(f"Preparing batches... batch {batches}/{batches}")
+        ps, ts = get_batch(i)
+        positions.extend(ps)
+        targets.extend(ts)
+        if len(positions) >= max_data_points:
+            break
+        print(f"Preparing batches... batch {idx+1}/{batches} - DP: {len(positions)}/{max_data_points}", end="\r", flush=True)
+    print(f"Preparing batches... batch -/{batches} - DP: {len(positions)}/{max_data_points}")
 
-    return positions, annotations
+    positions = torch.stack(list(positions))
+    targets = torch.tensor(targets, dtype=torch.float32).view(-1, 1)
+
+    assert positions.dtype == torch.int64
+    assert targets.dtype == torch.float32
+    assert len(positions.shape) == 2
+    assert positions.shape[1] == BLOCK_SIZE
+    assert targets.shape == (len(positions), 1)
+    
+    return positions, targets
 
 def pickle_save(data: list, fn: str):
     with open(fn, "wb") as f:

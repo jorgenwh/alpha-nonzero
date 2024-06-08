@@ -39,6 +39,7 @@
 */*.egg-info/
 venv/
 training/venv/
+training/data/
 training/training_data/
 training/test_data/test.pgn
 training/test_data/fens.fen

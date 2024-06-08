@@ -71,7 +71,7 @@ class Block(nn.Module):
 class Transformer(nn.Module):
     def __init__(self, 
                  vocab_size, 
-                 policy_size, 
+                 output_size, 
                  block_size, 
                  d_model, 
                  n_heads, 
@@ -94,7 +94,7 @@ class Transformer(nn.Module):
         )
 
         self.ln = nn.LayerNorm(d_model)
-        self.fc = nn.Linear(d_model, policy_size)
+        self.fc = nn.Linear(d_model, output_size)
 
     def forward(self, x):
         B, L = x.shape
@@ -108,7 +108,7 @@ class Transformer(nn.Module):
         x = self.ln(x)
         x = self.fc(x)
 
-        return x[:,-1,:]
+        return torch.sigmoid(x[:,-1,:])
 
 
 if __name__ == '__main__':
@@ -124,12 +124,12 @@ if __name__ == '__main__':
     n_heads = 8
     n_blocks = 6
     batch_size = 1
-    policy_size = len(policy_index) # 1858
+    output_size = 1
 
     x = torch.randint(vocab_size, size=(batch_size, block_size))
     model = Transformer(
         vocab_size=vocab_size,
-        policy_size=policy_size,
+        output_size=output_size,
         block_size=block_size,
         d_model=d_model,
         n_heads=n_heads,
