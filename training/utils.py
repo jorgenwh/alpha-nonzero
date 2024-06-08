@@ -78,8 +78,7 @@ def fen_to_fixed_length_fen(fen: str) -> str:
     return flfen
 
 def get_batch(batch_num):
-    #data = pickle_load(f"training_data/training_batch_{batch_num}.pkl")
-    data = pickle_load("training_data/training_batch_{batch_number}.pkl")
+    data = pickle_load(f"training_data/training_batch_{batch_num}.pkl")
 
     positions = deque()
     targets = deque()
