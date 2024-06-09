@@ -3,26 +3,36 @@ import torch
 from tqdm import tqdm
 
 from model import Transformer
-from utils import prepare_training_data, AverageMeter
-from constants import VOCAB_SIZE, BLOCK_SIZE
-
-
+from utils import fetch_training_data, AverageMeter
+from constants import (
+    OUTPUT_DIR,
+    MAX_DATA_POINTS,
+    LEARNING_RATE,
+    BATCH_SIZE,
+    TRAINING_ITERS,
+    VOCAB_SIZE,
+    BLOCK_SIZE,
+    NUM_BINS,
+    D_MODEL,
+    N_HEADS,
+    N_LAYERS,
+    DEVICE,
+)
 
 
 if __name__ == "__main__":
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
-    xdata, ydata = prepare_training_data(START_BATCH_NUMBER, END_BATCH_NUMBER, NUM_BINS, max_data_points=5000)
+    xdata, ydata = fetch_training_data(fn="data/training_data.pkl", num_bins=NUM_BINS, max_data_points=MAX_DATA_POINTS)
 
     model = Transformer(
         vocab_size=VOCAB_SIZE,
-        output_size=NUM_BINS,
         block_size=BLOCK_SIZE,
+        output_size=NUM_BINS,
         d_model=D_MODEL,
         n_heads=N_HEADS,
-        n_blocks=N_BLOCKS,
-        device=DEVICE,
+        n_layers=N_LAYERS
     ).to(DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)

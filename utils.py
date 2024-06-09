@@ -1,9 +1,8 @@
-from collections import deque
+import os
 import pickle
-import numpy as np
 import torch
 import chess
-from constants import POLICY_INDEX
+from constants import BLOCK_SIZE, CHAR_TO_IDX, VOCAB, POLICY_INDEX
 
 
 def fen_to_fixed_length_fen(fen: str) -> str:
@@ -77,67 +76,60 @@ def p_wins_to_bins(p_wins, num_bins):
 
     return bin_vecs
 
-def get_batch(batch_num):
-    data = pickle_load(f"training_data/training_batch_{batch_num}.pkl")
+def bins_to_p_wins(bins):
+    return torch.argmax(bins, dim=1).float() / (bins.shape[1] - 1)
 
-    positions = deque()
-    targets = deque()
+def tokenize_move(move: str) -> int:
+    return len(VOCAB) + POLICY_INDEX.index(move)
 
-    for (fen, move, p_win) in data:
-        p_win = float(p_win)
-        assert isinstance(fen, str)
-        assert isinstance(move, str)
-        assert isinstance(p_win, float)
+def fetch_training_data(fn, num_bins, max_data_points=None):
+    assert os.path.isfile(fn), f"File not found: {fn}"
 
-        pos_vec = torch.zeros(BLOCK_SIZE, dtype=torch.int64)
-        flfen = fen_to_fixed_length_fen(fen)
-        for i, c in enumerate(flfen):
-            pos_vec[i] = CHAR_TO_IDX[c]
-        pos_vec[-1] = policy_index.index(move)
+    inputs = []
+    targets = []
 
-        positions.append(pos_vec)
-        targets.append(p_win)
+    dp = 0
+    print("Fetching training data...")
+    with open(fn, "rb") as f:
+        while 1:
+            try:
+                fen, move, target = pickle.load(f)
+            except EOFError:
+                break
+            except Exception as e:
+                print(f"Unhandled error: {e}")
+                exit()
 
-    return positions, targets
-    
+            assert isinstance(fen, str), f"fen is not a string: {fen}"
+            assert isinstance(move, str), f"move is not a string: {move}"
+            assert isinstance(target, float), f"target is not a float: {target}"
 
-def prepare_training_data(sbn, ebn, num_bins, max_data_points=5000):
-    batches = (ebn - sbn) + 1
-    print(f"Preparing batches... batch 0/{batches}", end="\r", flush=True)
+            flfen = fen_to_fixed_length_fen(fen.strip())
 
-    positions = deque(maxlen=max_data_points)
-    targets = deque(maxlen=max_data_points)
+            tokenized_input = torch.zeros(BLOCK_SIZE, dtype=torch.int64)
+            for i, c in enumerate(flfen):
+                tokenized_input[i] = CHAR_TO_IDX[c]
+            tokenized_input[-1] = tokenize_move(move)
 
-    for idx, i in enumerate(range(sbn, ebn+1)):
-        ps, ts = get_batch(i)
-        positions.extend(ps)
-        targets.extend(ts)
-        if len(positions) >= max_data_points:
-            break
-        print(f"Preparing batches... batch {idx+1}/{batches} - DP: {len(positions)}/{max_data_points}", end="\r", flush=True)
-    print(f"Preparing batches... batch -/{batches} - DP: {len(positions)}/{max_data_points}")
+            inputs.append(tokenized_input)
+            targets.append(target)
+            dp += 1
 
-    positions = torch.stack(list(positions))
-    #targets = torch.tensor(targets, dtype=torch.float32).view(-1, 1)
+            if max_data_points is not None and dp >= max_data_points:
+                break
+
+            print(f"Parsing data point {dp}/{'-' if max_data_points is None else max_data_points}", end="\r", flush=True)
+        print(f"Parsing data point {dp}/{'-' if max_data_points is None else max_data_points}")
+
+    inputs = torch.stack(inputs)
     targets = p_wins_to_bins(targets, num_bins)
 
-    assert positions.dtype == torch.int64
-    assert targets.dtype == torch.float32
-    assert len(positions.shape) == 2
-    assert positions.shape[1] == BLOCK_SIZE
-    #assert targets.shape == (len(positions), 1)
-    assert targets.shape == (len(positions), num_bins)
-    
-    return positions, targets
-
-def pickle_save(data: list, fn: str):
-    with open(fn, "wb") as f:
-        pickle.dump(data, f)
-
-def pickle_load(fn: str):
-    with open(fn, "rb") as f:
-        data = pickle.load(f)
-    return data
+    assert inputs.shape == (dp, BLOCK_SIZE), f"inputs shape {inputs.shape} is not correct"
+    assert inputs.dtype == torch.int64, f"inputs dtype {inputs.dtype} is not correct"
+    assert targets.shape == (dp, num_bins), f"targets shape {targets.shape} is not correct"
+    assert targets.dtype == torch.float32, f"targets dtype {targets.dtype} is not correct"
+            
+    return inputs, targets
 
 
 class AverageMeter():
@@ -158,15 +150,8 @@ class AverageMeter():
 
 
 if __name__ == "__main__":
-    #fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    #fixed_length_fen = fen_to_fixed_length_fen(fen)
-
-    #print(f"original fen: {fen}")
-    #print(f"fixed-length fen: {fixed_length_fen}")
-
-    values = np.linspace(0, 1, 16)
-    bins = p_wins_to_bins(values, 16)
-    print(values)
-    print(bins)
-
-
+    x, y = fetch_training_data("data/training_data.pkl", num_bins=32, max_data_points=None)
+    print(x.shape)
+    print(x.dtype)
+    print(y.shape)
+    print(y.dtype)

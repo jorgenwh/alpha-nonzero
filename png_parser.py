@@ -1,7 +1,6 @@
 import time
 import chess
 
-
 def pgn_line_is_game(line: str) -> bool:
     return line[0].isnumeric()
 

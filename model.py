@@ -106,6 +106,7 @@ class Transformer(nn.Module):
 
 
 if __name__ == '__main__':
+    print(f"VOCAB_SIZE={VOCAB_SIZE}\nBLOCK_SIZE={BLOCK_SIZE}\nBATCH_SIZE={BATCH_SIZE}\nNUM_BINS={NUM_BINS}")
     x = torch.randint(VOCAB_SIZE, size=(BATCH_SIZE, BLOCK_SIZE))
     model = Transformer(
         vocab_size=VOCAB_SIZE,

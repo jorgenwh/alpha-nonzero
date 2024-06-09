@@ -31,14 +31,10 @@
 *.out
 *.app
 
-# Python
 */__pycache__/
 */*.egg-info/
 venv/
 fens/
 data/
-training_data/
-
-# models
 models/
 *.pt
