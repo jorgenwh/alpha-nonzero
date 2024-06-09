@@ -31,21 +31,12 @@
 *.out
 *.app
 
-# Stockfish
-*.nnue
-
 # Python
 */__pycache__/
 */*.egg-info/
 venv/
-training/venv/
-training/data/
-training/training_data/
-training/test_data/test.pgn
-training/test_data/fens.fen
-training/stockfish/stockfish-ubuntu-x86-64-avx2
-*avx2
-.vscode/
+fens/
+training_data/
 
 # models
 models/
