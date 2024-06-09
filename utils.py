@@ -3,9 +3,7 @@ import pickle
 import numpy as np
 import torch
 import chess
-from policy_index import policy_index
-
-
+from constants import POLICY_INDEX
 
 
 def fen_to_fixed_length_fen(fen: str) -> str:

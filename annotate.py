@@ -1,57 +1,70 @@
 import os
-import sys
+import argparse
 import math
-from tqdm import tqdm
-from utils import pickle_save
+import pickle
 from pystockfish import Stockfish
+from constants import THREADS, HASH, MULTI_PV, NODES_PER_ANNOTATION
 
-from consts import THREADS, HASH, MULTI_PV
 
-def annotate(fens: list, engine: Stockfish, data: list):
-    bar = tqdm(fens, desc="annotating", bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - data_points: {unit} - elapsed: {elapsed}")
-    for fen in bar:
-        engine.set_position(fen)
+def annotate(fen, engine, out_f) -> int:
+    engine.set_position(fen)
 
-        if engine.rule50_count() > 99:
-            continue
+    if engine.rule50_count() > 99:
+        return 0
 
-        engine.clear_evaluations()
-        engine.search(nodes=NODES_PER_ANNOTATION)
-        eval = engine.get_evaluations()
+    engine.clear_evaluations()
+    engine.search(nodes=NODES_PER_ANNOTATION)
+    eval = engine.get_evaluations()
 
-        for move in eval:
-            score_type, score = eval[move].split(" ")
-            cp = None
-            mate = None
+    for move in eval:
+        score_type, score = eval[move].split(" ")
+        cp = None
+        mate = None
 
-            if score_type == "mate":
-                mate = int(score)
-                p_win = 1 if mate > 0 else 0
-            elif score_type == "cp":
-                cp = int(score)
-                p_win = 0.5 + 0.5 * (2 / (1 + math.exp(-0.00368208 * cp)) - 1)
-            else:
-                raise ValueError(f"Invalid score type: '{score_type}'")
+        if score_type == "mate":
+            mate = int(score)
+            p_win = 1 if mate > 0 else 0
+        elif score_type == "cp":
+            cp = int(score)
+            p_win = 0.5 + 0.5 * (2 / (1 + math.exp(-0.00368208 * cp)) - 1)
+        else:
+            raise ValueError(f"Invalid score type: '{score_type}'")
 
-            data.append((fen, str(move), p_win))
-        bar.unit = str(len(data))
+        pickle.dump((fen, str(move), float(p_win)), out_f)
+
+    return len(eval)
 
 
 if __name__ == "__main__":
-    batch_number = sys.argv[1]
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-i", "-input-filename", type=str, help="File containing FEN strings", required=True)
+    arg_parser.add_argument("-o", "-output-filename", type=str, help="Output pickle file", required=True)
+    arg_parser.add_argument("-m", "-max-fens", type=int, default=None, help="Maximum number of FENs to annotate")
+    args = arg_parser.parse_args()
 
-    training_data_dir = "training_data"
-    input_batch_name = f"fen_batch_{batch_number}.fen"
+    input_filename = args.i
+    output_filename = args.o
+    max_fens = args.m
 
-    f = open(os.path.join(training_data_dir, input_batch_name), "r")
-    fens = [fen for fen in f]
-    f.close()
+    assert os.path.exists(input_filename), f"File '{input_filename}' does not exist"
+    assert not os.path.exists(output_filename), f"File '{output_filename}' already exists"
+    assert max_fens is None or max_fens > 0, f"Invalid max_fens: '{max_fens}'"
 
     engine = Stockfish()
     engine.set_option("Threads", THREADS)
     engine.set_option("Hash", HASH)
     engine.set_option("MultiPV", MULTI_PV)
+    print(
+        f"--- Stockfish settings ---\nThreads: {THREADS}\nHash: {HASH}\nMultiPV: {MULTI_PV}\nNodes per annotation: {NODES_PER_ANNOTATION}\n"
+    )
 
-    data = []
-    annotate(fens, engine, data)
-    pickle_save(data, f"training_data/training_batch_{batch_number}.pkl")
+    with open(input_filename, "r") as in_f:
+        with open(output_filename, "wb") as out_f:
+            dp = 0
+            for i, fen in enumerate(in_f, start=1):
+                print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens} - Data points {dp}", end="\r", flush=True)
+                dp += annotate(fen, engine, out_f)
+                if max_fens is not None and i >= max_fens:
+                    break
+            print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens} - Data points {dp}")
+
