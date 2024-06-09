@@ -10,7 +10,7 @@ BLOCK_SIZE           = 77 # 76 for the tokenized state and 1 for the tokenized a
 THREADS              = 6
 HASH                 = 8192
 MULTI_PV             = 256
-NODES_PER_ANNOTATION = 5000000
+NODES_PER_ANNOTATION = 20000000
 
 # --- Transformer settings ---
 D_MODEL              = 256
