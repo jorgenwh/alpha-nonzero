@@ -40,17 +40,20 @@ if __name__ == "__main__":
     arg_parser.add_argument("-i", "-input-filename", type=str, help="File containing FEN strings", required=True)
     arg_parser.add_argument("-o", "-output-filename", type=str, help="Output pickle file", required=True)
     arg_parser.add_argument("-m", "-max-fens", type=int, default=None, help="Maximum number of FENs to annotate")
+    arg_parser.add_argument("-s", "-skip", type=int, default=None, help="Number of FENs to skip before starting annotation")
     arg_parser.add_argument("-f", "-filter-duplicates", action="store_true", help="Filter duplicate FENs")
     args = arg_parser.parse_args()
 
     input_filename = args.i
     output_filename = args.o
     max_fens = args.m
+    skip = args.s
     filter_duplicates = args.f
 
     assert os.path.exists(input_filename), f"File '{input_filename}' does not exist"
     assert not os.path.exists(output_filename), f"File '{output_filename}' already exists"
     assert max_fens is None or max_fens > 0, f"Invalid max_fens: '{max_fens}'"
+    assert skip is None or skip >= 0, f"Invalid start: '{skip}'"
 
     engine = Stockfish()
     engine.set_option("Threads", THREADS)
@@ -63,6 +66,11 @@ if __name__ == "__main__":
     observed_fens = set()
     skipped_fens = 0
     with open(input_filename, "r") as in_f:
+        if skip is not None:
+            print(f"Skipping {skip} FENs")
+            for _ in in_f:
+                pass
+
         with open(output_filename, "wb") as out_f:
             dp = 0
             for i, fen in enumerate(in_f, start=1):
