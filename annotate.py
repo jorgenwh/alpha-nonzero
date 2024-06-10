@@ -70,8 +70,9 @@ if __name__ == "__main__":
     with open(input_filename, "r") as in_f:
         if skip is not None:
             print(f"Skipping {skip} FENs")
-            for _ in in_f:
-                pass
+            for i, _ in enumerate(in_f):
+                if i >= skip:
+                    break
 
         with open(output_filename, "wb") as out_f:
             dp = 0
