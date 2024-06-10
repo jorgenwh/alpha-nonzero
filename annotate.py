@@ -1,3 +1,4 @@
+import time
 import os
 import argparse
 import math
@@ -65,6 +66,7 @@ if __name__ == "__main__":
 
     observed_fens = set()
     skipped_fens = 0
+    start_time = time.time()
     with open(input_filename, "r") as in_f:
         if skip is not None:
             print(f"Skipping {skip} FENs")
@@ -80,10 +82,14 @@ if __name__ == "__main__":
                         continue
                     else:
                         observed_fens.add(fen)
-
-                print(f"Annotating FEN {i - skipped_fens}/{'-' if max_fens is None else max_fens} - Data points {dp} - skipped FENs {skipped_fens}", end="\r", flush=True)
                 dp += annotate(fen, engine, out_f)
+                elapsed_time = time.time() - start_time
+                fens_per_second = (i - skipped_fens) / elapsed_time if elapsed_time > 0 else 0
+                print(f"Annotating FEN {i - skipped_fens}/{'-' if max_fens is None else max_fens} - Data points {dp} - skipped FENs {skipped_fens} - FENs/second: {fens_per_second:.2f}", end="\r", flush=True)
                 if max_fens is not None and i - skipped_fens >= max_fens:
                     break
-            print(f"Annotating FEN {i - skipped_fens}/{'-' if max_fens is None else max_fens} - Data points {dp} - skipped FENs {skipped_fens}")
+            
+            elapsed_time = time.time() - start_time
+            fens_per_second = (i - skipped_fens) / elapsed_time if elapsed_time > 0 else 0
+            print(f"Annotating FEN {i - skipped_fens}/{'-' if max_fens is None else max_fens} - Data points {dp} - skipped FENs {skipped_fens} - FENs/second: {fens_per_second:.2f}")
 
