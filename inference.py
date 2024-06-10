@@ -25,7 +25,7 @@ if __name__ == "__main__":
         n_heads=N_HEADS,
         n_layers=N_LAYERS
     )
-    model.load_state_dict(torch.load("models/model_checkpoint_3000.pt"))
+    model.load_state_dict(torch.load("models/model_checkpoint_367000.pt"))
     model.eval()
     model = model.to(DEVICE)
 
