@@ -1,3 +1,5 @@
+import os
+import argparse
 import chess
 import torch
 
@@ -50,21 +52,37 @@ def play_puzzle(network, fen, target_sequence):
 
     return 1
 
-def puzzle_evaluate(network, puzzle_filename):
-    attempted = 0
+def puzzle_evaluate(network, puzzle_filename, num_puzzles):
     solved = 0
+    num_puzzles = sum([1 for _ in open(puzzle_filename, "r")]) if num_puzzles is None else num_puzzles
+
     with open(puzzle_filename, "r") as f:
-        for puzzle in f:
-            fen, target_sequence, rating = puzzle.split(",")
+        for i, puzzle in enumerate(f, start=1):
+            fen, target_sequence, _ = puzzle.split(",")
             target_sequence = target_sequence.split(" ")
             solved += play_puzzle(network, fen, target_sequence)
-            attempted += 1
-            print(f"Puzzle {attempted}/10000 - Solved: {solved} [{(solved/attempted)*100:.2f}%]", end="\r", flush=True)
-        print(f"Puzzle 10000/10000 - Solved: {solved} [{(solved/attempted)*100:.2f}%]")
-    return solved/attempted
+            if i >= num_puzzles:
+                break
+            print(f"Puzzle {i}/{num_puzzles} - Solved: {solved} [{(solved/i)*100:.2f}%]", end="\r", flush=True)
+        print(f"Puzzle {num_puzzles}/{num_puzzles} - Solved: {solved} [{(solved/i)*100:.2f}%]")
+
+    return solved/num_puzzles
 
 
 if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-m", "-model", type=str, help="Model to evaluate.", required=True)
+    arg_parser.add_argument("-n", "-num_puzzles", type=int, default=None, help="Number of puzzles.", required=False)
+    args = arg_parser.parse_args()
+
+    model_path = args.m
+    num_puzzles = args.n
+
+    assert os.path.exists(model_path), f"Model '{model_path}' does not exist"
+    assert num_puzzles is None or num_puzzles > 0, f"Invalid num_puzzles: '{num_puzzles}'"
+
+    print(f"Evaluating model '{model_path}' on {num_puzzles} puzzles")
+
     model = Transformer(
         vocab_size=VOCAB_SIZE,
         block_size=BLOCK_SIZE,
@@ -73,9 +91,10 @@ if __name__ == "__main__":
         n_heads=N_HEADS,
         n_layers=N_LAYERS
     )
-    model.load_state_dict(torch.load("models/model_checkpoint_367000.pt"))
+    model.load_state_dict(torch.load(model_path))
     model.eval()
     model = model.to(DEVICE)
 
-    p = puzzle_evaluate(model, "lichess_puzzles.csv")
-    print(f"Solved {p*100:.2f}% of the puzzles")
+    p = puzzle_evaluate(model, "lichess_puzzles.csv", num_puzzles=num_puzzles)
+    print(f"Model '{model_path}' successfully solved {p*100:.2f}% of the puzzles")
+
