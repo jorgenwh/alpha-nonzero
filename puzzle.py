@@ -64,7 +64,7 @@ def puzzle_evaluate(network, puzzle_filename, num_puzzles):
             if i >= num_puzzles:
                 break
             print(f"Puzzle {i}/{num_puzzles} - Solved: {solved} [{(solved/i)*100:.2f}%]", end="\r", flush=True)
-        print(f"Puzzle {num_puzzles}/{num_puzzles} - Solved: {solved} [{(solved/i)*100:.2f}%]")
+        print(f"Puzzle {num_puzzles}/{num_puzzles} - Solved: {solved} [{(solved/num_puzzles)*100:.2f}%]")
 
     return solved/num_puzzles
 
