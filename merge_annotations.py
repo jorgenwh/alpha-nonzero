@@ -4,24 +4,24 @@ import pickle
 from collections import deque
 
 
-def add_batch(observed_fens, data, batch_fn):
+def add_batch(observed_dp, data, batch_fn):
     duplicates = 0
     with open(batch_fn, "rb") as f:
         while 1:
             try:
-                fen, move, target = pickle.load(f)
+                dp = pickle.load(f)
             except EOFError:
                 break
             except Exception as e:
                 print(f"Unhandled error: {e}")
                 exit()
 
-            if fen in observed_fens:
+            if dp in observed_dp:
                 duplicates += 1
                 continue
 
-            observed_fens.add(fen)
-            data.append((fen, move, target))
+            observed_dp.add(dp)
+            data.append(dp)
 
     return duplicates
 
