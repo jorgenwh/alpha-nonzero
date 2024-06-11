@@ -3,8 +3,26 @@ import os
 import pickle
 from collections import deque
 
+i = 0
+with open("data/merged_annotations.pkl", "rb") as f:
+    while 1:
+        try:
+            fen, move, target = pickle.load(f)
+        except EOFError:
+            break
+        except Exception as e:
+            print(f"Unhandled error: {e}")
+            exit()
+
+        #print(fen, move, target)
+        i += 1
+
+print(i)
+#exit()
+
 
 def add_batch(observed_fens, data, batch_fn):
+    duplicates = 0
     with open(batch_fn, "rb") as f:
         while 1:
             try:
@@ -16,10 +34,13 @@ def add_batch(observed_fens, data, batch_fn):
                 exit()
 
             if fen in observed_fens:
+                duplicates += 1
                 continue
 
             observed_fens.add(fen)
             data.append((fen, move, target))
+
+    return duplicates
 
 def dump_data(data, output_fn):
     with open(output_fn, "wb") as f:
@@ -45,7 +66,9 @@ if __name__ == "__main__":
     observed_fens = set()
     data = deque()
 
+    duplicates = 0
     for fn in batch_fns:
-        add_batch(observed_fens, data, fn)
+        duplicates = add_batch(observed_fens, data, fn)
+    print(f"Found {duplicates} duplicate FENs")
 
     dump_data(data, output_fn)
