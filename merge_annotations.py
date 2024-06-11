@@ -3,23 +3,6 @@ import os
 import pickle
 from collections import deque
 
-i = 0
-with open("data/merged_annotations.pkl", "rb") as f:
-    while 1:
-        try:
-            fen, move, target = pickle.load(f)
-        except EOFError:
-            break
-        except Exception as e:
-            print(f"Unhandled error: {e}")
-            exit()
-
-        #print(fen, move, target)
-        i += 1
-
-print(i)
-#exit()
-
 
 def add_batch(observed_fens, data, batch_fn):
     duplicates = 0
