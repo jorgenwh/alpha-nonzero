@@ -1,30 +1,51 @@
+import argparse
 import os
+import pickle
+from collections import deque
 
-def combine_files(input_directory, output_file):
-    dataPoints = 0
-    if not os.path.isdir(input_directory):
-        print(f"The directory {input_directory} does not exist.")
-        return    
 
-    print(f"Combining files from directory: {input_directory}")
-    
-    with open(output_file, 'wb') as outfile:
-        for filename in os.listdir(input_directory):
-            file_path = os.path.join(input_directory, filename)
-            
-            if os.path.isfile(file_path):
-                print(f"Processing file: {file_path}")
-                
-                with open(file_path, 'rb') as infile:
-                    for line in infile:
-                        outfile.write(line)
-                        dataPoints += 1
-                        print(f"lineCount: {dataPoints}", end="\r", flush=True)
-    
-    print(f"\nProcessed {dataPoints} data points.")
-    print(f"All files have been combined into {output_file}")
+def add_batch(observed_fens, data, batch_fn):
+    with open(batch_fn, "rb") as f:
+        while 1:
+            try:
+                fen, move, target = pickle.load(f)
+            except EOFError:
+                break
+            except Exception as e:
+                print(f"Unhandled error: {e}")
+                exit()
 
-# Define the input directory and output file
-input_directory = 'training/annotations'
-output_file = 'combined_annotations.fen'
-combine_files(input_directory, output_file)
+            if fen in observed_fens:
+                continue
+
+            observed_fens.add(fen)
+            data.append((fen, move, target))
+
+def dump_data(data, output_fn):
+    with open(output_fn, "wb") as f:
+        for dp in data:
+            pickle.dump(dp, f)
+
+
+if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-i", "-input", type=str, help="Input directory containing the annotation batches to combine", required=True)
+    arg_parser.add_argument("-o", "-output", type=str, help="Output filename", required=True)
+    args = arg_parser.parse_args()
+
+    input_dir = args.i
+    output_fn = args.o
+
+    assert os.path.isdir(input_dir), f"Directory '{input_dir}' does not exist"
+    assert not os.path.exists(output_fn), f"File '{output_fn}' already exists"
+
+    batch_fns = [os.path.join(input_dir, fn) for fn in os.listdir(input_dir)]
+    assert len(batch_fns) > 0, f"No files found in '{input_dir}'"
+
+    observed_fens = set()
+    data = deque()
+
+    for fn in batch_fns:
+        add_batch(observed_fens, data, fn)
+
+    dump_data(data, output_fn)
