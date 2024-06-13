@@ -29,11 +29,10 @@ def extract_fen_history(moves: list) -> list:
 
     return fens
 
-def parse_pgn(input_filename: str, output_filename: str):
+def parse_pgn(input_filename: str, output_filename: str) -> None:
     in_file = open(input_filename, "r")
     out_file = open(output_filename, "w")
 
-    # read entire pgn file line by line
     games_parsed = 0
     t0 = time.time()
     for line in in_file:
@@ -58,8 +57,3 @@ def parse_pgn(input_filename: str, output_filename: str):
     out_file.close()
 
 
-if __name__ == "__main__":
-    input_filename = "data/lichess_db_standard_rated_2017-01.pgn" # big file
-    #input_filename = "test_data/lichess_db_standard_rated_2013-01.pgn" # small file
-    output_filename = "data/fens.fen"
-    parse_pgn(input_filename, output_filename)

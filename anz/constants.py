@@ -4,8 +4,6 @@ from .policy_index import policy_index
 POLICY_INDEX         = policy_index
 POLICY_SIZE          = len(POLICY_INDEX)
 VOCAB                = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
-VOCAB_SIZE           = len(VOCAB)
-BLOCK_SIZE           = 76
 
 # --- Annotation settings ---
 THREADS              = 6
@@ -13,12 +11,14 @@ HASH                 = 8192
 NODES_PER_ANNOTATION = 1000000
 
 # --- Transformer settings ---
+VOCAB_SIZE           = len(VOCAB)
+BLOCK_SIZE           = 76
 D_MODEL              = 256
 N_HEADS              = 8
 N_LAYERS             = 8
 
-# --- ConvNet settings ---
-pass
+# --- ResNet settings ---
+N_BLOCKS             = 4
 
 # --- Training settings ---
 LEARNING_RATE        = 0.001

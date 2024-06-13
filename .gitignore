@@ -31,11 +31,15 @@
 *.out
 *.app
 
-/__pycache__/
-*/__pycache__/
+__pycache__/
+anz/__pycache__/
+anz/models/__pycache__/
+anz/pgn/__pycache__/
+
 */*.egg-info/
 *.egg-info/
 venv/
 fens/
 data/
 *.pt
+tmp/
