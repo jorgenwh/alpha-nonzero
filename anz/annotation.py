@@ -16,6 +16,7 @@ def annotate(fen, engine):
     engine.search(nodes=NODES_PER_ANNOTATION)
     eval = engine.get_evaluations()
     move = engine.get_best_move()
+    assert move in eval, f"Move '{move}' not in eval: {eval}"
     value_type, value = eval[move].split(" ")
     value = int(value)
 
@@ -58,13 +59,14 @@ def annotate_fen_file(input_fn, output_fn, max_fens):
             pickle.dump(dp, out_fp)
 
     for i, fen in enumerate(in_fp, start=1):
+        print(fen)
         move, value = annotate(fen, engine)
         if move is not None:
             pickle.dump((fen, move, value), out_fp)
         if max_fens is not None and i >= max_fens:
             break
-        print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens}", end="\r", flush=True)
-    print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens}")
+        #print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens}", end="\r", flush=True)
+    #print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens}")
 
     in_fp.close()
     out_fp.close()
