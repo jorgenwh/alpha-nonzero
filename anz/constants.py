@@ -4,6 +4,7 @@ from .policy_index import policy_index
 POLICY_INDEX         = policy_index
 POLICY_SIZE          = len(POLICY_INDEX)
 VOCAB                = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
+BOARD_CONV_CHANNELS  = 20
 
 # --- Annotation settings ---
 THREADS              = 6
@@ -18,7 +19,7 @@ N_HEADS              = 8
 N_LAYERS             = 8
 
 # --- ResNet settings ---
-N_BLOCKS             = 4
+N_BLOCKS             = 6
 
 # --- Training settings ---
 LEARNING_RATE        = 0.001
