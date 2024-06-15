@@ -4,7 +4,9 @@ from .policy_index import policy_index
 POLICY_INDEX         = policy_index
 POLICY_SIZE          = len(POLICY_INDEX)
 VOCAB                = sorted(list(set(c for c in "PpRrNnBbQqKkabcdefgh12345678wb.09")))
-BOARD_CONV_CHANNELS  = 20
+
+# 6 + 6 + 4 + 2 + 1 + 1 + 1 = 21 : (white pieces, black pieces, castling, en passant, repetition, halfmove, fullmove)
+BOARD_CONV_CHANNELS  = 20 
 
 # --- Annotation settings ---
 THREADS              = 6
