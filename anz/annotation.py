@@ -16,7 +16,8 @@ def annotate(fen, engine):
     engine.search(nodes=NODES_PER_ANNOTATION)
     eval = engine.get_evaluations()
     move = engine.get_best_move()
-    if move == "(none)":
+
+    if move not in eval:
         return None, None
 
     value_type, value = eval[move].split(" ")
@@ -41,34 +42,49 @@ def annotate_fen_file(input_fn, output_fn, max_fens):
         f"--- Stockfish settings ---\nThreads: {THREADS}\nHash: {HASH}\nNodes per annotation: {NODES_PER_ANNOTATION}\n"
     )
 
-    # Hacky solution for now
+    observed_fens = set()
     data = deque()
+
+    # Hacky solution for now
     if os.path.exists(output_fn):
         with open(output_fn, "rb") as f:
             while 1:
                 try:
-                    data.append(pickle.load(f))
+                    fen, move, value = pickle.load(f)
+                    observed_fens.add(fen)
+                    data.append((fen, move, value))
                 except EOFError:
                     break
                 except Exception as e:
                     print(f"Error while reading already existing content in output file '{output_fn}': {e}")
 
-    in_fp = open(input_fn, "r")
-    out_fp = open(output_fn, "wb")
+    with open(input_fn, "r") as in_fp:
+        with open(output_fn, "wb") as out_fp:
 
-    if len(data) > 0:
-        for dp in data:
-            pickle.dump(dp, out_fp)
+            if len(data) > 0:
+                for dp in data:
+                    pickle.dump(dp, out_fp)
 
-    for i, fen in enumerate(in_fp, start=1):
-        move, value = annotate(fen, engine)
-        if move is not None:
-            pickle.dump((fen, move, value), out_fp)
-        if max_fens is not None and i >= max_fens:
-            break
-        print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens}", end="\r", flush=True)
-    print(f"Annotating FEN {i}/{'-' if max_fens is None else max_fens}")
+            annotated = 0
+            skipped = 0
+            for fen in in_fp:
+                if fen in observed_fens:
+                    skipped += 1
+                    continue
 
-    in_fp.close()
-    out_fp.close()
+                observed_fens.add(fen)
+                move, value = annotate(fen, engine)
+
+                if move is None:
+                    skipped += 1
+                    continue
+
+                annotated += 1
+                pickle.dump((fen, move, value), out_fp)
+
+                if max_fens is not None and annotated >= max_fens:
+                    break
+
+                print(f"Annotating FEN {annotated}/{'-' if max_fens is None else max_fens} - skipped {skipped} FENs", end="\r", flush=True)
+            print(f"Annotating FEN {annotated}/{'-' if max_fens is None else max_fens} - skipped {skipped} FENs")
 

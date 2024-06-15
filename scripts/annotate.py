@@ -8,8 +8,6 @@ if __name__ == "__main__":
     arg_parser.add_argument("-i", "-input-filename", type=str, help="File containing FEN strings", required=True)
     arg_parser.add_argument("-o", "-output-filename", type=str, help="Output pickle file", required=True)
     arg_parser.add_argument("-m", "-max-fens", type=int, default=None, help="Maximum number of FENs to annotate")
-    arg_parser.add_argument("-s", "-skip", type=int, default=None, help="Number of FENs to skip before starting annotation")
-    arg_parser.add_argument("-f", "-filter-duplicates", action="store_true", help="Filter duplicate FENs")
     args = arg_parser.parse_args()
 
     input_fn = args.i
