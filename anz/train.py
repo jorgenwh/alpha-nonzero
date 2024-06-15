@@ -3,7 +3,7 @@ import torch
 from tqdm import tqdm
 
 from model import Transformer
-from utils import fetch_training_data, AverageMeter
+from helpers import fetch_training_data, AverageMeter
 from constants import (
     OUTPUT_DIR,
     MAX_DATA_POINTS,
