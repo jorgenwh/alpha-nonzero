@@ -50,8 +50,8 @@ def parse_pgn(input_filename: str, output_filename: str) -> None:
             games_per_second = games_parsed / elapsed_s
 
             if games_parsed % 100 == 0:
-                print(f"Games parsed: {games_parsed} [{int(games_per_second)}/s]", end="\r")
-    print(f"Games parsed: {games_parsed} [{int(games_per_second)}/s]")
+                print(f"Games parsed: {games_parsed:,} [{int(games_per_second)}/s]", end="\r")
+    print(f"Games parsed: {games_parsed:,} [{int(games_per_second)}/s]")
 
     in_file.close()
     out_file.close()

@@ -63,8 +63,8 @@ def puzzle_evaluate(network, puzzle_filename, num_puzzles):
             solved += play_puzzle(network, fen, target_sequence)
             if i >= num_puzzles:
                 break
-            print(f"Puzzle {i}/{num_puzzles} - Solved: {solved} [{(solved/i)*100:.2f}%]", end="\r", flush=True)
-        print(f"Puzzle {num_puzzles}/{num_puzzles} - Solved: {solved} [{(solved/num_puzzles)*100:.2f}%]")
+            print(f"Puzzle {i:,}/{num_puzzles:,} - Solved: {solved:,} [{(solved/i)*100:.2f}%]", end="\r", flush=True)
+        print(f"Puzzle {num_puzzles:,}/{num_puzzles:,} - Solved: {solved:,} [{(solved/num_puzzles)*100:.2f}%]")
 
     return solved/num_puzzles
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     assert os.path.exists(model_path), f"Model '{model_path}' does not exist"
     assert num_puzzles is None or num_puzzles > 0, f"Invalid num_puzzles: '{num_puzzles}'"
 
-    print(f"Evaluating model '{model_path}' on {num_puzzles} puzzles")
+    print(f"Evaluating model '{model_path}' on {num_puzzles:,} puzzles")
 
     model = Transformer(
         vocab_size=VOCAB_SIZE,

@@ -52,6 +52,6 @@ if __name__ == "__main__":
     duplicates = 0
     for fn in batch_fns:
         duplicates = add_batch(observed_fens, data, fn)
-    print(f"Found {duplicates} duplicate FENs")
+    print(f"Found {duplicates:,} duplicate FENs")
 
     dump_data(data, output_fn)

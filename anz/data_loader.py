@@ -1,3 +1,4 @@
+import time
 import os
 import pickle
 import chess
@@ -31,6 +32,21 @@ class AlphaZeroDataset(Dataset):
 def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> AlphaZeroDataset:
     assert os.path.isfile(fn), f"File not found: {fn}"
 
+    size = 0
+    if max_datapoints is None:
+        with open(fn, "rb") as in_fp:
+            while 1:
+                try:
+                    _ = pickle.load(in_fp)
+                except EOFError:
+                    break
+                except Exception as e:
+                    print(f"Error while reading file '{fn}': {e}")
+                    exit(1)
+                size += 1
+    else:
+        size = max_datapoints
+
     fens = []
     moves = []
     values = []
@@ -38,7 +54,7 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
     with open(fn, "rb") as in_fp:
         i = 1
         while 1:
-            print(f"Reading datapoint {i}/{'-' if max_datapoints is None else max_datapoints}", end="\r", flush=True)
+            print(f"Reading datapoint {i:,}/{size:,}", end="\r", flush=True)
             try:
                 fen, move, value = pickle.load(in_fp)
                 fen = fen.strip()
@@ -52,7 +68,7 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
                 values.append(value)
                 i += 1
 
-                if max_datapoints is not None and i >= max_datapoints:
+                if i >= size:
                     break
 
             except EOFError:
@@ -61,7 +77,7 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
                 print(f"Error while reading file '{fn}': {e}")
                 exit(1)
 
-        print(f"Reading datapoint {i}/{'-' if max_datapoints is None else max_datapoints}")
+        print(f"Reading datapoint {i:,}/{size:,}")
 
     return AlphaZeroDataset(fens, moves, values, model_type)
 
