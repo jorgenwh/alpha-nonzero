@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE
+from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, BATCH_SIZE
 
 
 class Attention(nn.Module):
@@ -82,19 +82,26 @@ class Transformer(nn.Module):
     def forward(self, x):
         _, L = x.shape
 
+        # get positional and token embeddings
         pos = torch.arange(0, L, dtype=torch.long, device=x.device).reshape(1, -1)
         pos_emb = self.positional_encoding(pos)
         tok_emb = self.input_embedding(x)
 
+        # forward pass through the transformer
         x = tok_emb + pos_emb
         x = self.blocks(x)
         x = self.ln(x)
 
+        # get the last embedded prediction
+        x = x[:,-1,:].reshape(BATCH_SIZE, D_MODEL)
+
+        # forward pass for the value head
         v = self.v_fc(x)
         v = self.v(v)
+        v = torch.tanh(v)
 
+        # forward pass for the policy head
         pi = self.pi_fc(x)
         pi = self.pi(pi)
 
-        return pi[:,-1,:], v[:,-1,:]
-
+        return pi, v

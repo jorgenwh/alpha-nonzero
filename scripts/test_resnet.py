@@ -2,13 +2,13 @@ import time
 import torch
 from pytorch_model_summary import summary
 
-from anz.constants import BOARD_CONV_CHANNELS, BATCH_SIZE
+from anz.constants import BOARD_CONV_CHANNELS, BATCH_SIZE, DEVICE
 from anz.models import ResNet
 
 if __name__ == '__main__':
     print(f"BOARD_CONV_CHANNELS={BOARD_CONV_CHANNELS}\nBATCH_SIZE={BATCH_SIZE}")
-    x = torch.randn(size=(BATCH_SIZE, BOARD_CONV_CHANNELS, 8, 8), dtype=torch.float32)
-    model = ResNet()
+    x = torch.randn(size=(BATCH_SIZE, BOARD_CONV_CHANNELS, 8, 8), dtype=torch.float32).to(DEVICE)
+    model = ResNet().to(DEVICE)
 
     print("Forwarding input of shape: " + str(list(x.shape)))
     t0 = time.time()

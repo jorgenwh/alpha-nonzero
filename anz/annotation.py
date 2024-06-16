@@ -39,7 +39,7 @@ def annotate_fen_file(input_fn, output_fn, max_fens):
     engine.set_option("MultiPV", 1)
 
     print(
-        f"--- Stockfish settings ---\nThreads: {THREADS}\nHash: {HASH}\nNodes per annotation: {NODES_PER_ANNOTATION}\n"
+        f"--- Stockfish settings ---\nThreads: {THREADS:,}\nHash: {HASH:,}\nNodes per annotation: {NODES_PER_ANNOTATION:,}\n"
     )
 
     observed_fens = set()

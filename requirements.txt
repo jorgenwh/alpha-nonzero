@@ -1,5 +1,5 @@
 chess==1.10.0
-filelock==3.14.0
+filelock==3.15.1
 fsspec==2024.6.0
 Jinja2==3.1.4
 MarkupSafe==2.1.5

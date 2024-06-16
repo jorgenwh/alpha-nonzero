@@ -2,15 +2,41 @@
 
 <p align="center"><img src="assets/aichess.png" width="50%"></p>
 
-## Development plan
+## Install
 
-### Experimental (Python)
-- [x] Obtain chess games dataset (Lichess?)
-- [x] Implement PGN parser
-- [x] Implement board representation and output similar to GLCWS
-- [ ] Implement transformer architecture used in GLCWS
-- [ ] Implement Stockfish evaluation for chess positions to generate training data
-- [ ] Set up training pipeline where we train the model on auto-generated training data and evaluate that it improves in strength
+##### Clone the project from GitHub
+```bash
+git clone https://github.com/jorgenwh/alpha-nonzero.git
+cd alpha-nonzero
+```
 
-### Implement search mechanism (C++, CUDA, cuDNN)
-* [ ] ...
+##### Fetch submodules
+```bash
+git submodule update --init --recursive
+```
+
+##### Set up a Python virtual environment and update
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+```
+
+##### Install necessary third-party dependencies
+```bash
+pip install -r requirements.txt
+```
+
+##### Install pystockfish
+```bash
+cd pystockfish
+pip install .
+cd ..
+```
+
+##### Install alpha-nonzero
+```bash
+pip install -e .
+```
+
+You should now be able to run all the scripts in the 'scripts' directory :)

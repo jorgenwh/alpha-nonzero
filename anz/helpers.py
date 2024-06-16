@@ -1,12 +1,9 @@
-import os
 import psutil
-import pickle
 import chess
 import torch
-from torch.utils.data import Dataset, DataLoader
 
 from anz.policy_index import policy_index
-from anz.constants import BATCH_SIZE, BLOCK_SIZE, BOARD_CONV_CHANNELS, CHAR_TO_IDX, POLICY_SIZE
+from anz.constants import BLOCK_SIZE, BOARD_CONV_CHANNELS, CHAR_TO_IDX, POLICY_SIZE
 
 DTYPE_BYTE_SIZES = {
     torch.float32   : 4,

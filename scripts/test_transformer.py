@@ -2,13 +2,13 @@ import time
 import torch
 from pytorch_model_summary import summary
 
-from anz.constants import VOCAB_SIZE, BLOCK_SIZE, BATCH_SIZE
+from anz.constants import VOCAB_SIZE, BLOCK_SIZE, BATCH_SIZE, DEVICE
 from anz.models import Transformer
 
 if __name__ == '__main__':
     print(f"VOCAB_SIZE={VOCAB_SIZE}\nBLOCK_SIZE={BLOCK_SIZE}\nBATCH_SIZE={BATCH_SIZE}")
-    x = torch.randint(VOCAB_SIZE, size=(BATCH_SIZE, BLOCK_SIZE), dtype=torch.int64)
-    model = Transformer()
+    x = torch.randint(VOCAB_SIZE, size=(BATCH_SIZE, BLOCK_SIZE), dtype=torch.int64).to(DEVICE)
+    model = Transformer().to(DEVICE)
 
     print("Forwarding input of shape: " + str(list(x.shape)))
     t0 = time.time()
