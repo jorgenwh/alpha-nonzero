@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, BATCH_SIZE
+from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, BATCH_SIZE, DEVICE
 
 
 class Attention(nn.Module):
@@ -66,6 +66,7 @@ class Transformer(nn.Module):
         super().__init__()
         self.input_embedding = nn.Embedding(VOCAB_SIZE, D_MODEL)
         self.positional_encoding = nn.Embedding(BLOCK_SIZE, D_MODEL)
+        self.positional_vector = torch.arange(0, BLOCK_SIZE, dtype=torch.int64, device=DEVICE).reshape(1, BLOCK_SIZE)
 
         self.blocks = nn.Sequential(
             *[Block() for _ in range(N_LAYERS)]
@@ -80,11 +81,10 @@ class Transformer(nn.Module):
         self.pi = nn.Linear(256, POLICY_SIZE)
 
     def forward(self, x):
-        _, L = x.shape
+        B, _ = x.shape
 
         # get positional and token embeddings
-        pos = torch.arange(0, L, dtype=torch.long, device=x.device).reshape(1, -1)
-        pos_emb = self.positional_encoding(pos)
+        pos_emb = self.positional_encoding(self.positional_vector)
         tok_emb = self.input_embedding(x)
 
         # forward pass through the transformer
@@ -93,7 +93,7 @@ class Transformer(nn.Module):
         x = self.ln(x)
 
         # get the last embedded prediction
-        x = x[:,-1,:].reshape(BATCH_SIZE, D_MODEL)
+        x = x[:,-1,:].reshape(B, D_MODEL)
 
         # forward pass for the value head
         v = self.v_fc(x)
