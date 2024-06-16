@@ -53,7 +53,8 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
     with open(fn, "rb") as in_fp:
         i = 1
         while 1:
-            print(f"Reading datapoint {i:,}/{size:,}", end="\r", flush=True)
+            if i % 1000 == 0:
+                print(f"Reading datapoint {i:,}/{size:,}", end="\r", flush=True)
             try:
                 fen, move, value = pickle.load(in_fp)
                 fen = fen.strip()
