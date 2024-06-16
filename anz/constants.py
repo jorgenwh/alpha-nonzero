@@ -24,12 +24,10 @@ N_LAYERS             = 8
 N_BLOCKS             = 6
 
 # --- Training settings ---
-EPOCHS               = 3
+EPOCHS               = 10
+BATCH_SIZE           = 512
 LEARNING_RATE        = 0.001
-BATCH_SIZE           = 256
 DEVICE               = "cuda:0"
-OUTPUT_DIR           = "tmp"
-MAX_DATA_POINTS      = None
 
 # --- Misc ---
 CHAR_TO_IDX          = {c:i for i, c in enumerate(VOCAB)}

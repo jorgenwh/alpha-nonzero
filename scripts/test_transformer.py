@@ -1,3 +1,4 @@
+import time
 import torch
 from pytorch_model_summary import summary
 
@@ -10,8 +11,10 @@ if __name__ == '__main__':
     model = Transformer()
 
     print("Forwarding input of shape: " + str(list(x.shape)))
+    t0 = time.time()
     pi, v = model(x)
-    print("Forward pass successful")
+    t1 = time.time()
+    print("Forward pass successful - took {:.2f} seconds".format(t1 - t0))
     print(f"Policy shape: {pi.shape}")
     print(f"Value shape: {v.shape}")
 
