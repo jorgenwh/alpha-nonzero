@@ -15,7 +15,6 @@ if __name__ == "__main__":
     max_fens = args.m
 
     assert os.path.exists(input_fn), f"File '{input_fn}' does not exist"
-    assert not os.path.exists(output_fn), f"File '{output_fn}' already exists"
     assert max_fens is None or max_fens > 0, f"Invalid max_fens: '{max_fens}'"
 
     annotate_fen_file(input_fn, output_fn, max_fens)

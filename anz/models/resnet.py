@@ -72,3 +72,4 @@ class Block(nn.Module):
         r += residual
         r = F.relu(r)
         return r
+

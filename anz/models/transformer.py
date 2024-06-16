@@ -96,5 +96,5 @@ class Transformer(nn.Module):
         pi = self.pi_fc(x)
         pi = self.pi(pi)
 
-        return v[:,-1,:], pi[:,-1,:]
+        return pi[:,-1,:], v[:,-1,:]
 
