@@ -32,9 +32,9 @@ def train_loop(model, optimizer, data_loader, model_type, output_dir):
             v_loss = mean_squared_error_loss(vs, v, vs.shape[0])
             loss = pi_loss + v_loss
 
-            epoch_loss.update(pi_loss.item(), positions.shape[0])
-            epoch_pi_loss.update(v_loss.item(), positions.shape[0])
-            epoch_v_loss.update(loss.item(), positions.shape[0])
+            epoch_pi_loss.update(pi_loss.item(), positions.shape[0])
+            epoch_v_loss.update(v_loss.item(), positions.shape[0])
+            epoch_loss.update(loss.item(), positions.shape[0])
             bar.unit = f"pi_loss: {epoch_pi_loss} v_loss: {epoch_v_loss} loss: {epoch_loss}"
 
             optimizer.zero_grad()
