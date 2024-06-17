@@ -57,13 +57,18 @@ MIRROR_FILE_MAP = {
 
 
 def flip_chess_move(move: str) -> str:
-    assert len(move) == 4, f"Invalid move format: '{move}'"
-    from_file, from_rank, to_file, to_rank = move[0], move[1], move[2], move[3]
+    assert len(move) == 4 or len(move) == 5, f"Invalid move format: '{move}'"
+    if len(move) == 4:
+        from_file, from_rank, to_file, to_rank, promotion = move[0], move[1], move[2], move[3], ""
+    else:
+        from_file, from_rank, to_file, to_rank, promotion = move[0], move[1], move[2], move[3], move[4]
+
     from_file = MIRROR_FILE_MAP[from_file]
     from_rank = MIRROR_RANK_MAP[from_rank]
     to_file = MIRROR_FILE_MAP[to_file]
     to_rank = MIRROR_RANK_MAP[to_rank]
-    return from_file + from_rank + to_file + to_rank
+
+    return from_file + from_rank + to_file + to_rank + promotion
 
 def allocate_zero_tensor(size, dtype) -> torch.Tensor:
     available_bytes = psutil.virtual_memory().available
