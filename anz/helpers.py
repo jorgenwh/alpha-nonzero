@@ -34,6 +34,36 @@ EN_PASSANT_BOARD_CHANNEL            = 16
 HALFMOVE_CLOCK_BOARD_CHANNEL        = 17
 FULLMOVE_CLOCK_BOARD_CHANNEL        = 18
 
+MIRROR_RANK_MAP = {
+    "1": "8",
+    "2": "7",
+    "3": "6",
+    "4": "5",
+    "5": "4",
+    "6": "3",
+    "7": "2",
+    "8": "1"
+}
+MIRROR_FILE_MAP = {
+    "a": "h",
+    "b": "g",
+    "c": "f",
+    "d": "e",
+    "e": "d",
+    "f": "c",
+    "g": "b",
+    "h": "a"
+}
+
+
+def flip_chess_move(move: str) -> str:
+    assert len(move) == 4, f"Invalid move format: '{move}'"
+    from_file, from_rank, to_file, to_rank = move[0], move[1], move[2], move[3]
+    from_file = MIRROR_FILE_MAP[from_file]
+    from_rank = MIRROR_RANK_MAP[from_rank]
+    to_file = MIRROR_FILE_MAP[to_file]
+    to_rank = MIRROR_RANK_MAP[to_rank]
+    return from_file + from_rank + to_file + to_rank
 
 def allocate_zero_tensor(size, dtype) -> torch.Tensor:
     available_bytes = psutil.virtual_memory().available

@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from typing import Union
 
 from .constants import BATCH_SIZE
-from .helpers import MODEL_TYPES, fen2vec, move2vec, allocate_zero_tensor
+from .helpers import MODEL_TYPES, fen2vec, move2vec, allocate_zero_tensor, flip_chess_move
 
 class AlphaZeroDataset(Dataset):
     def __init__(self, fens: list, moves: list, values: list, model_type: str):
@@ -61,6 +61,7 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
                 board = chess.Board(fen)
                 if not board.turn:
                     fen = board.mirror().transform(chess.flip_horizontal).fen()
+                    move = flip_chess_move(move)
                     value = -value
 
                 fens.append(fen)
