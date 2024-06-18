@@ -24,8 +24,8 @@ N_LAYERS             = 8
 N_BLOCKS             = 6
 
 # --- Training settings ---
-EPOCHS               = 10
-BATCH_SIZE           = 512
+EPOCHS               = 100
+BATCH_SIZE           = 256
 LEARNING_RATE        = 0.001
 DEVICE               = "cuda:0"
 

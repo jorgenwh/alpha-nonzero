@@ -97,11 +97,13 @@ class Transformer(nn.Module):
 
         # forward pass for the value head
         v = self.v_fc(x)
+        v = F.relu(v)
         v = self.v(v)
         v = torch.tanh(v)
 
         # forward pass for the policy head
         pi = self.pi_fc(x)
+        pi = F.relu(pi)
         pi = self.pi(pi)
 
         return pi, v
