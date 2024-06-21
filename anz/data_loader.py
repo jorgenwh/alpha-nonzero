@@ -6,15 +6,14 @@ from torch.utils.data import Dataset, DataLoader
 from typing import Union
 
 from .constants import BATCH_SIZE
-from .helpers import MODEL_TYPES, fen2vec, move2vec, allocate_zero_tensor, flip_chess_move
+from .helpers import MODEL_TYPES, fen2vec, allocate_zero_tensor
 
 class AlphaZeroDataset(Dataset):
-    def __init__(self, fens: list, moves: list, values: list, model_type: str):
+    def __init__(self, fens: list, values: list, model_type: str):
         self.fens = fens
-        self.moves = moves
         self.values = values
         self.model_type = model_type
-        assert len(self.fens) == len(self.moves) == len(self.values)
+        assert len(self.fens) == len(self.values)
         assert model_type in MODEL_TYPES, f"model_type must be one of {MODEL_TYPES}, not '{model_type}'"
 
     def __len__(self):
@@ -22,10 +21,9 @@ class AlphaZeroDataset(Dataset):
 
     def __getitem__(self, index):
         position = fen2vec(self.fens[index], self.model_type)
-        pi = move2vec(self.moves[index])
         v = allocate_zero_tensor((1), torch.float32)
         v[0] = self.values[index]
-        return position, pi, v
+        return position, v
 
 
 def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> AlphaZeroDataset:
@@ -47,7 +45,6 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
         size = max_datapoints
 
     fens = []
-    moves = []
     values = []
 
     with open(fn, "rb") as in_fp:
@@ -56,16 +53,15 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
             if i % 1000 == 0:
                 print(f"Reading datapoint {i:,}/{size:,}", end="\r", flush=True)
             try:
-                fen, move, value = pickle.load(in_fp)
+                fen, value = pickle.load(in_fp)
                 fen = fen.strip()
                 board = chess.Board(fen)
-                if not board.turn:
+                if board.turn == chess.BLACK:
+                    raise ValueError(f"Invalid FEN: '{fen}'")
                     fen = board.mirror().transform(chess.flip_horizontal).fen()
-                    move = flip_chess_move(move)
                     value = -value
 
                 fens.append(fen)
-                moves.append(move)
                 values.append(value)
                 i += 1
 
@@ -80,7 +76,7 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
 
         print(f"Reading datapoint {i:,}/{size:,}")
 
-    return AlphaZeroDataset(fens, moves, values, model_type)
+    return AlphaZeroDataset(fens, values, model_type)
 
 def get_data_loader(fn: str, model_type: str, max_datapoints: Union[int, None]) -> DataLoader:
     dataset = get_dataset(fn, model_type, max_datapoints)
