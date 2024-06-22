@@ -17,9 +17,6 @@ def policy_vec_to_move(pi: torch.Tensor) -> str:
     move = POLICY_INDEX[move_idx]
     return move
 
-def value_vec_to_move(v: torch.Tensor) -> float:
-    return v.item()
-
 def run_value_head_policy_inference(model: torch.nn.Module, model_type: str, fen: str) -> InferenceResult:
     board = chess.Board(fen)
     best_move = None
@@ -29,7 +26,7 @@ def run_value_head_policy_inference(model: torch.nn.Module, model_type: str, fen
         board.push(move)
         fen = board.fen()
         _, v = forward_pass(model, model_type, fen)
-        value = value_vec_to_move(v)
+        value = v.item()
         if best_value is None or value > best_value:
             best_move = str(move)
             best_value = value
@@ -48,7 +45,7 @@ def run_mcts_policy_inference(model: torch.nn.Module, model_type: str, fen: str,
 def run_raw_inference(model: torch.nn.Module, model_type: str, fen: str) -> InferenceResult:
     pi, v = forward_pass(model, model_type, fen)
     move = policy_vec_to_move(pi)
-    value = value_vec_to_move(v)
+    value = v.item()
     return InferenceResult(move=move, value=value)
 
 def run_inference(model_path: str, model_type: str, fen: str, mcts: Union[int, None], value_only: bool, policy_only: bool) -> InferenceResult:

@@ -1,6 +1,7 @@
 import psutil
 import chess
 import torch
+from typing import Union, Tuple
 
 from anz.models import Transformer, ResNet
 from anz.policy_index import policy_index
@@ -73,7 +74,6 @@ def load_model(model_path: str, model_type: str) -> torch.nn.Module:
 
     return model
 
-
 def flip_fen_if_black_turn(fen: str) -> str:
     board = chess.Board(fen)
     if board.turn == chess.BLACK:
@@ -94,7 +94,7 @@ def flip_chess_move(move: str) -> str:
 
     return from_file + from_rank + to_file + to_rank + promotion
 
-def allocate_zero_tensor(size, dtype) -> torch.Tensor:
+def allocate_zero_tensor(size: Union[int, Tuple], dtype: torch.dtype) -> torch.Tensor:
     available_bytes = psutil.virtual_memory().available
     needed_bytes = DTYPE_BYTE_SIZES[dtype]
     if isinstance(size, int):
