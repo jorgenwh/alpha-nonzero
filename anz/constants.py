@@ -1,3 +1,4 @@
+import torch
 from .policy_index import policy_index
 
 # --- State and action details ---
@@ -27,7 +28,7 @@ N_BLOCKS             = 6
 EPOCHS               = 100
 BATCH_SIZE           = 256
 LEARNING_RATE        = 0.001
-DEVICE               = "cuda:0"
+DEVICE               = "cuda" if torch.cuda.is_available() else "cpu"
 
 # --- Misc ---
 CHAR_TO_IDX          = {c:i for i, c in enumerate(VOCAB)}

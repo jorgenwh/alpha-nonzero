@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, BATCH_SIZE, DEVICE
+from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, DEVICE
 
 
 class Attention(nn.Module):
@@ -74,11 +74,11 @@ class Transformer(nn.Module):
 
         self.ln = nn.LayerNorm(D_MODEL)
 
-        self.v_fc = nn.Linear(D_MODEL, 256)
-        self.v = nn.Linear(256, 1)
+        self.v_fc = nn.Linear(D_MODEL, 512)
+        self.v = nn.Linear(512, 1)
 
-        self.pi_fc = nn.Linear(D_MODEL, 256)
-        self.pi = nn.Linear(256, POLICY_SIZE)
+        self.pi_fc = nn.Linear(D_MODEL, 512)
+        self.pi = nn.Linear(512, POLICY_SIZE)
 
     def forward(self, x):
         B, _ = x.shape
@@ -95,15 +95,15 @@ class Transformer(nn.Module):
         # get the last embedded prediction
         x = x[:,-1,:].reshape(B, D_MODEL)
 
+        # forward pass for the policy head
+        pi = self.pi_fc(x)
+        pi = F.relu(pi)
+        pi = self.pi(pi)
+
         # forward pass for the value head
         v = self.v_fc(x)
         v = F.relu(v)
         v = self.v(v)
         v = torch.tanh(v)
-
-        # forward pass for the policy head
-        pi = self.pi_fc(x)
-        pi = F.relu(pi)
-        pi = self.pi(pi)
 
         return pi, v

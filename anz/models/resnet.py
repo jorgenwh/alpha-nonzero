@@ -16,18 +16,18 @@ class ResNet(nn.Module):
 
         # policy head
         self.pi_conv_bn = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=2, kernel_size=1, stride=1),
-            nn.BatchNorm2d(num_features=2)
+            nn.Conv2d(in_channels=256, out_channels=2*BOARD_CONV_CHANNELS, kernel_size=1, stride=1),
+            nn.BatchNorm2d(num_features=2*BOARD_CONV_CHANNELS)
         )
-        self.pi = nn.Linear(2 * 8 * 8, POLICY_SIZE)
+        self.pi = nn.Linear(2*8*8*BOARD_CONV_CHANNELS, POLICY_SIZE)
 
         # value head
         self.v_conv_bn = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=1, kernel_size=1, stride=1),
-            nn.BatchNorm2d(num_features=1)
+            nn.Conv2d(in_channels=256, out_channels=BOARD_CONV_CHANNELS, kernel_size=1, stride=1),
+            nn.BatchNorm2d(num_features=BOARD_CONV_CHANNELS)
         )
-        self.v_fc = nn.Linear(8 * 8, 256)
-        self.v = nn.Linear(256, 1)
+        self.v_fc = nn.Linear(8*8*BOARD_CONV_CHANNELS, 512)
+        self.v = nn.Linear(512, 1)
 
     def forward(self, x):
         N, _, _, _ = x.shape
@@ -39,13 +39,13 @@ class ResNet(nn.Module):
         # policy head forward
         pi = self.pi_conv_bn(r)
         pi = F.relu(pi)
-        pi = pi.view(N, 2 * 8 * 8)
+        pi = pi.view(N, 2*8*8*BOARD_CONV_CHANNELS)
         pi = self.pi(pi)
 
         # value head forward
         v = self.v_conv_bn(r)
         v = F.relu(v)
-        v = v.view(N, 8 * 8)
+        v = v.view(N, 8*8*BOARD_CONV_CHANNELS)
         v = self.v_fc(v)
         v = F.relu(v)
         v = self.v(v)

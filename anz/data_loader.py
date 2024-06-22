@@ -8,6 +8,7 @@ from typing import Union
 from .constants import BATCH_SIZE
 from .helpers import MODEL_TYPES, fen2vec, move2vec, allocate_zero_tensor, flip_chess_move
 
+
 class AlphaZeroDataset(Dataset):
     def __init__(self, fens: list, moves: list, values: list, model_type: str):
         self.fens = fens

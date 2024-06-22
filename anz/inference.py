@@ -1,53 +1,70 @@
-import sys
-import torch
 import chess
+import torch
+from typing import Tuple, Union
 
-from model import Transformer
-from utils import fen_to_fixed_length_fen, bins_to_p_wins, tokenize_move
-from constants import (
-    VOCAB_SIZE,
-    BLOCK_SIZE,
-    NUM_BINS,
-    D_MODEL,
-    N_HEADS,
-    N_LAYERS,
-    DEVICE,
-    CHAR_TO_IDX,
-)
+from anz.helpers import load_model, fen2vec, flip_fen_if_black_turn
+from anz.constants import DEVICE, POLICY_INDEX
+from anz.types import InferenceResult
 
 
-if __name__ == "__main__":
-    model = Transformer(
-        vocab_size=VOCAB_SIZE,
-        block_size=BLOCK_SIZE,
-        output_size=NUM_BINS,
-        d_model=D_MODEL,
-        n_heads=N_HEADS,
-        n_layers=N_LAYERS
-    )
-    model.load_state_dict(torch.load("models/model_checkpoint_367000.pt"))
-    model.eval()
-    model = model.to(DEVICE)
+def forward_pass(model: torch.nn.Module, model_type: str, fen: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    fen_vec = fen2vec(fen, model_type).unsqueeze(0).to(DEVICE)
+    pi, v = model(fen_vec)
+    return pi, v
 
-    fen = sys.argv[1]
-    flfen = fen_to_fixed_length_fen(fen)
-    tokenized_position = torch.zeros(1, BLOCK_SIZE, dtype=torch.int64)
-    for i, c in enumerate(flfen):
-        tokenized_position[0, i] = CHAR_TO_IDX[c]
-    tokenized_position = tokenized_position.to(DEVICE)
+def policy_vec_to_move(pi: torch.Tensor) -> str:
+    move_idx = int(torch.argmax(torch.softmax(pi, dim=1)).item())
+    move = POLICY_INDEX[move_idx]
+    return move
 
+def value_vec_to_move(v: torch.Tensor) -> float:
+    return v.item()
+
+def run_value_head_policy_inference(model: torch.nn.Module, model_type: str, fen: str) -> InferenceResult:
     board = chess.Board(fen)
-    legal_moves = board.generate_legal_moves()
+    best_move = None
+    best_value = None
 
-    net_eval = {}
-    for move in legal_moves:
-        tokenized_position[0, -1] = tokenize_move(str(move))
+    for move in board.legal_moves:
+        board.push(move)
+        fen = board.fen()
+        _, v = forward_pass(model, model_type, fen)
+        value = value_vec_to_move(v)
+        if best_value is None or value > best_value:
+            best_move = str(move)
+            best_value = value
+        board.pop()
 
-        output = model(tokenized_position)
-        value = bins_to_p_wins(output).item()
+    return InferenceResult(move=best_move, value=None)
 
-        net_eval[str(move)] = value
+def run_policy_head_policy_inference(model: torch.nn.Module, model_type: str, fen: str) -> InferenceResult:
+    pi, _ = forward_pass(model, model_type, fen)
+    move = policy_vec_to_move(pi)
+    return InferenceResult(move=move, value=None)
 
+def run_mcts_policy_inference(model: torch.nn.Module, model_type: str, fen: str, mcts: int) -> InferenceResult:
+    raise NotImplementedError("MCTS policy inference not implemented")
 
-    for move in sorted(net_eval, key=net_eval.get, reverse=True):
-        print(f"{move}: {round(net_eval[move], 4)}")
+def run_raw_inference(model: torch.nn.Module, model_type: str, fen: str) -> InferenceResult:
+    pi, v = forward_pass(model, model_type, fen)
+    move = policy_vec_to_move(pi)
+    value = value_vec_to_move(v)
+    return InferenceResult(move=move, value=value)
+
+def run_inference(model_path: str, model_type: str, fen: str, mcts: Union[int, None], value_only: bool, policy_only: bool) -> InferenceResult:
+    model = load_model(model_path, model_type).to(DEVICE)
+    corrected_fen = flip_fen_if_black_turn(fen)
+
+    if value_only:
+        print(f"Running value-head-only policy inference for FEN: {fen} with model: {model_path}")
+        return run_value_head_policy_inference(model, model_type, corrected_fen)
+    if policy_only:
+        print(f"Running single-pass policy-head-only inference for FEN: {fen} with model: {model_path}")
+        return run_policy_head_policy_inference(model, model_type, corrected_fen)
+    if mcts is not None:
+        print(f"Running MCTS [{mcts}] policy inference for FEN: {fen} with model: {model_path}")
+        return run_mcts_policy_inference(model, model_type, corrected_fen, mcts)
+    else:
+        print(f"Running single-pass raw inference for FEN: {fen} with model: {model_path}")
+        return run_raw_inference(model, model_type, corrected_fen)
+

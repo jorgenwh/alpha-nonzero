@@ -6,14 +6,11 @@ from .helpers import AverageMeter
 from .data_loader import get_data_loader
 from .constants import EPOCHS, DEVICE
 
-def cross_entropy_loss(target: torch.Tensor, out: torch.Tensor, size: int) -> torch.Tensor:
-    return -torch.sum(target * out) / size
-
-def mean_squared_error_loss(target: torch.Tensor, out: torch.Tensor, size: int) -> torch.Tensor:
-    return torch.sum((target - out.reshape(-1)) ** 2) / size
-
 def train_loop(model, optimizer, data_loader, model_type, output_dir):
+    pi_loss_fn = torch.nn.CrossEntropyLoss()
+    v_loss_fn = torch.nn.MSELoss()
     model.train()
+
     for epoch in range(EPOCHS):
         print(f"Epoch: {epoch+1}/{EPOCHS}")
         epoch_loss = AverageMeter()
@@ -28,8 +25,8 @@ def train_loop(model, optimizer, data_loader, model_type, output_dir):
 
             pi, v = model(positions)
 
-            pi_loss = cross_entropy_loss(pis, torch.log_softmax(pi, dim=1), pis.shape[0])
-            v_loss = mean_squared_error_loss(vs, v, vs.shape[0])
+            pi_loss = pi_loss_fn(pi, pis)
+            v_loss = v_loss_fn(v, vs)
             loss = pi_loss + v_loss
 
             epoch_pi_loss.update(pi_loss.item(), positions.shape[0])

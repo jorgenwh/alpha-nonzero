@@ -2,8 +2,10 @@ import psutil
 import chess
 import torch
 
+from anz.models import Transformer, ResNet
 from anz.policy_index import policy_index
 from anz.constants import BLOCK_SIZE, BOARD_CONV_CHANNELS, CHAR_TO_IDX, POLICY_SIZE
+
 
 DTYPE_BYTE_SIZES = {
     torch.float32   : 4,
@@ -55,6 +57,28 @@ MIRROR_FILE_MAP = {
     "h": "a"
 }
 
+
+def load_model(model_path: str, model_type: str) -> torch.nn.Module:
+    model = None
+    if model_type == "transformer":
+        model = Transformer()
+    if model_type == "resnet":
+        model = ResNet()
+    assert model is not None, f"Model type {model_type} not supported"
+
+    try:
+        model.load_state_dict(torch.load(model_path))
+    except Exception as e:
+        raise Exception(f"Error loading model from {model_path}: {e}")
+
+    return model
+
+
+def flip_fen_if_black_turn(fen: str) -> str:
+    board = chess.Board(fen)
+    if board.turn == chess.BLACK:
+        return board.mirror().transform(chess.flip_horizontal).fen()
+    return fen
 
 def flip_chess_move(move: str) -> str:
     assert len(move) == 4 or len(move) == 5, f"Invalid move format: '{move}'"
