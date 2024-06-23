@@ -1,43 +1,19 @@
+import os
 import chess
 import torch
 from typing import Union
 
-from anz.constants import DEVICE
-from anz.helpers import (
-    load_model
-)
-from anz.inference import (
-    run_value_head_policy_inference, 
-    run_policy_head_policy_inference, 
-    run_mcts_policy_inference
-)
-from anz.types import (
-    InferenceResult, 
-    PuzzleEvaluationResult
-)
-
-def get_policy(
-        model: torch.nn.Module, 
-        model_type: str, 
-        fen: str, 
-        mcts: Union[int, None], 
-        value_only: bool, 
-        policy_only: bool
-) -> InferenceResult:
-    if value_only:
-        return run_value_head_policy_inference(model, model_type, fen)
-    if policy_only:
-        return run_policy_head_policy_inference(model, model_type, fen)
-    if mcts is not None:
-        return run_mcts_policy_inference(model, model_type, fen, mcts)
-    assert False, "No policy function selected. Choose either value-head-only [--v], policy-head-only [--pi], or MCTS [-mcts <num_simulations>]"
+from .constants import DEVICE
+from .helpers import load_model
+from .inference import run_inference
+from .types import InferenceType, PuzzleEvaluationResult
 
 def play_puzzle(
         model: torch.nn.Module, 
         model_type: str, 
         fen: str, 
         target_sequence: list, 
-        mcts: Union[int, None], 
+        mcts_rollouts: Union[int, None], 
         value_only: bool, 
         policy_only: bool
 ) -> int:
@@ -46,7 +22,7 @@ def play_puzzle(
 
     for target_move in target_sequence:
         if other_turn != board.turn:
-            inference_result = get_policy(model, model_type, fen, mcts, value_only, policy_only)
+            inference_result = run_inference(model, model_type, fen, mcts_rollouts, value_only, policy_only)
             move = inference_result.move
             assert move is not None, f"Invalid move returned from policy: {move}"
             if move != target_move:
@@ -61,25 +37,43 @@ def puzzle_evaluate(
         model_path: str, 
         model_type: str, 
         puzzles_path: str, 
-        num_puzzles: Union[int, None], 
-        mcts: Union[int, None], 
+        num_puzzles: int,
+        mcts_rollouts: Union[int, None], 
         value_only: bool, 
         policy_only: bool
 ) -> PuzzleEvaluationResult:
     model = load_model(model_path, model_type).to(DEVICE)
     solved = 0
-    num_puzzles = sum([1 for _ in open(puzzles_path, "r")]) if num_puzzles is None else num_puzzles
 
     with open(puzzles_path, "r") as f:
         for i, puzzle in enumerate(f, start=1):
             fen, target_sequence, _ = puzzle.split(",")
             target_sequence = target_sequence.split(" ")
-            solved += play_puzzle(model, model_type, fen, target_sequence, mcts, value_only, policy_only)
+            solved += play_puzzle(model, model_type, fen, target_sequence, mcts_rollouts, value_only, policy_only)
             if i >= num_puzzles:
                 break
             print(f"Puzzle {i:,}/{num_puzzles:,} - Solved: {solved:,} [{(solved/i)*100:.2f}%]", end="\r", flush=True)
         print(f"Puzzle {num_puzzles:,}/{num_puzzles:,} - Solved: {solved:,} [{(solved/num_puzzles)*100:.2f}%]")
 
     acc = solved/num_puzzles
-    return PuzzleEvaluationResult(accuracy=acc)
+    return PuzzleEvaluationResult(accuracy=acc, inference_type=InferenceType.UNKNOWN, mcts_rollouts=None)
 
+def puzzle_evaluate_training_trajectory(
+        models_dir: str,
+        model_type: str,
+        puzzles_path: str,
+        num_puzzles: int,
+        mcts_rollouts: Union[int, None],
+        value_only: bool,
+        policy_only: bool
+) -> list:
+    model_fns = sorted(os.listdir(models_dir))
+    evaluation_results = []
+
+    for i, model_fn in enumerate(model_fns, start=1):
+        model_path = os.path.join(models_dir, model_fn)
+        print(f"Evaluating model {i:,}/{len(model_fns):,}")
+        result = puzzle_evaluate(model_path, model_type, puzzles_path, num_puzzles, mcts_rollouts, value_only, policy_only)
+        evaluation_results.append(result)
+
+    return evaluation_results

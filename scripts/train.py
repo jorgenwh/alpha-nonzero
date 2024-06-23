@@ -12,10 +12,9 @@ if __name__ == "__main__":
         required=True
     )
     arg_parser.add_argument(
-        "-m",
-        "-model",
+        "-mt",
+        "-model-type",
         type=str,
-        default="transformer",
         choices=["transformer", "resnet"],
         help="Model type: 'transformer' or 'resnet'",
         required=True
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
 
     data_fn = args.d
-    model_type = args.m
+    model_type = args.mt
     output_dir = args.o
     max_datapoints = args.md
 

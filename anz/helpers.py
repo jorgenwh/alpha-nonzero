@@ -3,9 +3,9 @@ import chess
 import torch
 from typing import Union, Tuple
 
-from anz.models import Transformer, ResNet
-from anz.policy_index import policy_index
-from anz.constants import BLOCK_SIZE, BOARD_CONV_CHANNELS, CHAR_TO_IDX, POLICY_SIZE
+from .models import Transformer, ResNet
+from .constants import BLOCK_SIZE, BOARD_CONV_CHANNELS, CHAR_TO_IDX, POLICY_SIZE, POLICY_INDEX, DEVICE
+from .types import InferenceResult
 
 
 DTYPE_BYTE_SIZES = {
@@ -74,10 +74,13 @@ def load_model(model_path: str, model_type: str) -> torch.nn.Module:
 
     return model
 
+def flip_fen(fen: str) -> str:
+    return chess.Board(fen).mirror().transform(chess.flip_horizontal).fen()
+
 def flip_fen_if_black_turn(fen: str) -> str:
     board = chess.Board(fen)
     if board.turn == chess.BLACK:
-        return board.mirror().transform(chess.flip_horizontal).fen()
+        return flip_fen(fen)
     return fen
 
 def flip_chess_move(move: str) -> str:
@@ -93,6 +96,15 @@ def flip_chess_move(move: str) -> str:
     to_rank = MIRROR_RANK_MAP[to_rank]
 
     return from_file + from_rank + to_file + to_rank + promotion
+
+def flip_inference_result(result: InferenceResult) -> InferenceResult:
+    flipped_result = InferenceResult(
+        fen=flip_fen(result.fen), move=None, value=None, inference_type=result.inference_type, mcts_rollouts=result.mcts_rollouts) 
+    if result.move is not None:
+        flipped_result.move = flip_chess_move(result.move)
+    if result.value is not None:
+        flipped_result.value = -result.value
+    return flipped_result
 
 def allocate_zero_tensor(size: Union[int, Tuple], dtype: torch.dtype) -> torch.Tensor:
     available_bytes = psutil.virtual_memory().available
@@ -228,10 +240,16 @@ def fen2vec(fen: str, model_type: str = "transformer") -> torch.Tensor:
     assert False, f"Invalid model_type: '{model_type}'"
 
 def move2vec(move: str) -> torch.Tensor:
-    index = policy_index.index(move)
+    index = POLICY_INDEX.index(move)
     vec = allocate_zero_tensor((POLICY_SIZE), torch.float32)
     vec[index] = 1
     return vec
+
+def model_forward_pass(model: torch.nn.Module, model_type: str, fen: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    fen_vec = fen2vec(fen, model_type).unsqueeze(0).to(DEVICE)
+    pi, v = model(fen_vec)
+    return pi, v
+
 
 class AverageMeter():
     def __init__(self):
