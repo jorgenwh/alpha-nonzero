@@ -85,6 +85,6 @@ def annotate_fen_file(input_fn, output_fn, max_fens):
                 if max_fens is not None and annotated >= max_fens:
                     break
 
-                print(f"Annotating FEN {annotated:,}/{'-' if max_fens is None else max_fens:,} - skipped {skipped:,} FENs", end="\r", flush=True)
-            print(f"Annotating FEN {annotated:,}/{'-' if max_fens is None else max_fens:,} - skipped {skipped:,} FENs")
+                print(f"Annotating FEN {annotated}/{'-' if max_fens is None else max_fens} - skipped {skipped} FENs", end="\r", flush=True)
+            print(f"Annotating FEN {annotated}/{'-' if max_fens is None else max_fens} - skipped {skipped} FENs")
 
