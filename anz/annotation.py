@@ -3,6 +3,7 @@ import math
 import pickle
 from collections import deque
 from pystockfish import Stockfish
+
 from .constants import THREADS, HASH, NODES_PER_ANNOTATION
 
 

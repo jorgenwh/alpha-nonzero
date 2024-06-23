@@ -33,7 +33,7 @@ if __name__ == "__main__":
         required=False
     )
     arg_parser.add_argument(
-        "-mcts", 
+        "-mcts-rollouts", 
         type=int, 
         default=None,
         help="Number of MCTS simulations to run. MCTS will not be used if this argument is not provided",
@@ -58,15 +58,16 @@ if __name__ == "__main__":
     model_path = args.m
     model_type = args.mt
     fen = args.f
-    mcts = args.mcts
+    mcts_rollouts = args.mcts_rollouts
     value_only = args.v
     policy_only = args.pi
 
     assert os.path.exists(model_path), f"Model file '{model_path}' does not exist"
     assert model_type in ["transformer", "resnet"], f"Invalid model type: {model_type}"
-    assert mcts is None or mcts >= 0, f"Invalid value for mcts: {mcts}"
+    assert mcts_rollouts is None or mcts_rollouts >= 0, f"Invalid value for mcts: {mcts_rollouts}"
     assert not (value_only and policy_only), "Cannot use both --v and --pi flags at the same time"
-    assert not ((value_only or policy_only) and (mcts is not None)), "Cannot use --v or --pi flags with MCTS"
+    assert not ((value_only or policy_only) and (mcts_rollouts is not None)), "Cannot use --v or --pi flags with MCTS"
 
-    inference_result = run_inference(model_path, model_type, fen, mcts, value_only, policy_only)
+    inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=True)
     print(inference_result)
+

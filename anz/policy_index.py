@@ -226,4 +226,5 @@ policy_index = sorted([
 
 
 if __name__ == "__main__":
+    print(policy_index)
     print(len(policy_index))
