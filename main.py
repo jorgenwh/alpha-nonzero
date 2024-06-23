@@ -1,12 +1,11 @@
+import torch
 
-import pickle
 
-with open("data/training_data.pkl", "rb") as f:
-    while True:
-        inp = input("~")
-        if inp == "q":
-            break
-        try:
-            print(pickle.load(f))
-        except EOFError:
-            break
+x = torch.tensor([0.1, 0, 0, 0.3, 0, 0, 0.6, 0, 0, 0], dtype=torch.float32)
+
+selections = [0 for _ in range(10)]
+for _ in range(10000):
+    s = torch.multinomial(x, 1)
+    selections[s] += 1
+
+print([s / sum(selections) for s in selections])
