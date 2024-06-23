@@ -20,7 +20,6 @@ if __name__ == "__main__":
         "-mt",
         "-model-type",
         type=str,
-        default="transformer",
         choices=["transformer", "resnet"],
         help="Model type: 'transformer' or 'resnet'",
         required=True
@@ -68,6 +67,7 @@ if __name__ == "__main__":
     assert not (value_only and policy_only), "Cannot use both --v and --pi flags at the same time"
     assert not ((value_only or policy_only) and (mcts_rollouts is not None)), "Cannot use --v or --pi flags with MCTS"
 
-    inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=True)
+    verbose = True
+    inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=verbose)
     print(inference_result)
 

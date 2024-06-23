@@ -16,7 +16,6 @@ if __name__ == "__main__":
         "-mt",
         "-model-type",
         type=str,
-        default="transformer",
         choices=["transformer", "resnet"],
         help="Model type: 'transformer' or 'resnet'",
         required=True

@@ -25,20 +25,33 @@ class MCTS():
         self.Q = defaultdict(float) # Average value of a state-action pair
         self.P = defaultdict(lambda: torch.zeros(POLICY_SIZE, dtype=torch.float32)) # Prior probability of taking an action in a state
 
-    def go(self, fen: str, rollouts: int = DEFAULT_MCTS_ROLLOUTS, verbose: bool = False) -> InferenceResult:
+    def go(self, 
+           fen: str, 
+           rollouts: int = DEFAULT_MCTS_ROLLOUTS, 
+           verbose: bool = False
+    ) -> InferenceResult:
+        self.model.eval()
         canonical_fen = flip_fen_if_black_turn(fen)
         inference_result = InferenceResult(
             canonical_fen, None, None, inference_type=InferenceType.MCTS, mcts_rollouts=rollouts)
 
-        iter = range(rollouts)
+        it = range(rollouts)
         if verbose:
             print(f"Running MCTS with {rollouts} rollouts on FEN '{fen}'")
-            iter = tqdm(range(rollouts), desc="MCTS simulations", bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - elapsed: {elapsed}")
+            it = tqdm(range(rollouts), desc="MCTS simulations", bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - elapsed: {elapsed}")
 
-        for _ in iter:
+        for _ in it:
             self.leaf_rollout(canonical_fen)
 
         raw_pi = [self.N[(canonical_fen, move)] for move in POLICY_INDEX]
+
+        # Debug
+        # legal_moves = [str(m) for m in chess.Board(canonical_fen).legal_moves]
+        # for i, (m, av) in enumerate(zip(POLICY_INDEX, raw_pi)):
+        #     if m in legal_moves:
+        #         print(f"move: {m} - visits: {av} - network: {self.P[canonical_fen][i]}")
+        #     else:
+        #         assert av == 0
 
         # if temperature = 0, we choose the action deterministically for competitive play
         if TEMPERATURE > 0:
@@ -80,7 +93,7 @@ class MCTS():
         # if a leaf node is reached, we evaluate using the network
         if fen not in self.P:
             pi, v = model_forward_pass(self.model, self.model_type, fen)
-            pi = pi.to("cpu").reshape(POLICY_SIZE)
+            pi = torch.softmax(pi, dim=1).to("cpu").reshape(POLICY_SIZE)
             v = v.to("cpu").item()
 
             assert pi.shape == legal_move_vec.shape
