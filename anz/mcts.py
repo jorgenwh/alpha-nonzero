@@ -2,6 +2,7 @@ import math
 import torch
 import chess
 from collections import defaultdict
+from tqdm import tqdm
 
 from .helpers import flip_fen, flip_fen_if_black_turn, flip_inference_result, model_forward_pass
 from .types import InferenceResult, InferenceType
@@ -29,14 +30,13 @@ class MCTS():
         inference_result = InferenceResult(
             canonical_fen, None, None, inference_type=InferenceType.MCTS, mcts_rollouts=rollouts)
 
+        iter = range(rollouts)
         if verbose:
             print(f"Running MCTS with {rollouts} rollouts on FEN '{fen}'")
-        for i in range(rollouts):
-            if verbose:
-                print(f"rollout {i:,}/{rollouts:,}", end="\r", flush=True)
+            iter = tqdm(range(rollouts), desc="MCTS simulations", bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - elapsed: {elapsed}")
+
+        for _ in iter:
             self.leaf_rollout(canonical_fen)
-        if verbose:
-            print(f"rollout {rollouts:,}/{rollouts:,}")
 
         raw_pi = [self.N[(canonical_fen, move)] for move in POLICY_INDEX]
 
