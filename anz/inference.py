@@ -53,7 +53,7 @@ def run_raw_inference(model: torch.nn.Module, model_type: str, fen: str) -> Infe
     move = policy_vec_to_move(pi)
     value = v.item()
     return InferenceResult(
-        fen=fen, move=move, value=value, inference_type=InferenceType.POLICY_ONLY, mcts_rollouts=None)
+        fen=fen, move=move, value=value, inference_type=InferenceType.RAW, mcts_rollouts=None)
 
 def run_inference(
         model: Union[torch.nn.Module, str], 
@@ -62,7 +62,7 @@ def run_inference(
         mcts_rollouts: Union[int, None], 
         value_only: bool, 
         policy_only: bool,
-        verbose=False
+        verbose: bool = False
 ) -> InferenceResult:
     model = load_model(model, model_type).to(DEVICE) if isinstance(model, str) else model.to(DEVICE)
     corrected_fen = flip_fen_if_black_turn(fen)

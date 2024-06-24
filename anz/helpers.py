@@ -75,7 +75,19 @@ def load_model(model_path: str, model_type: str) -> torch.nn.Module:
     return model
 
 def flip_fen(fen: str) -> str:
-    return chess.Board(fen).mirror().transform(chess.flip_horizontal).fen()
+    board = chess.Board(fen)
+    castling_fen = ""
+    if board.has_kingside_castling_rights(chess.WHITE):
+        castling_fen += "k"
+    if board.has_queenside_castling_rights(chess.WHITE):
+        castling_fen += "q"
+    if board.has_kingside_castling_rights(chess.BLACK):
+        castling_fen += "K"
+    if board.has_queenside_castling_rights(chess.BLACK):
+        castling_fen += "Q"
+    board = board.mirror().transform(chess.flip_horizontal)
+    board.set_castling_fen(castling_fen)
+    return board.fen()
 
 def flip_fen_if_black_turn(fen: str) -> str:
     board = chess.Board(fen)

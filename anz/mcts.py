@@ -2,6 +2,7 @@ import math
 import torch
 import chess
 from collections import defaultdict
+from dataclasses import dataclass
 from tqdm import tqdm
 
 from .helpers import flip_fen, flip_fen_if_black_turn, flip_inference_result, model_forward_pass
@@ -14,6 +15,13 @@ from .constants import (
     POLICY_SIZE
 )
 
+@dataclass
+class NodeCache:
+    visited = False
+    legal_moves = []
+    v = None
+    pi = None
+
 
 class MCTS():
     def __init__(self, model: torch.nn.Module, model_type: str):
@@ -24,6 +32,7 @@ class MCTS():
         self.W = defaultdict(float) # Total value of a state-action pair
         self.Q = defaultdict(float) # Average value of a state-action pair
         self.P = defaultdict(lambda: torch.zeros(POLICY_SIZE, dtype=torch.float32)) # Prior probability of taking an action in a state
+        self.M = defaultdict(lambda: NodeCache()) # Cached legal move list for states
 
     def go(self, 
            fen: str, 
@@ -44,14 +53,6 @@ class MCTS():
             self.leaf_rollout(canonical_fen)
 
         raw_pi = [self.N[(canonical_fen, move)] for move in POLICY_INDEX]
-
-        # Debug
-        # legal_moves = [str(m) for m in chess.Board(canonical_fen).legal_moves]
-        # for i, (m, av) in enumerate(zip(POLICY_INDEX, raw_pi)):
-        #     if m in legal_moves:
-        #         print(f"move: {m} - visits: {av} - network: {self.P[canonical_fen][i]}")
-        #     else:
-        #         assert av == 0
 
         # if temperature = 0, we choose the action deterministically for competitive play
         if TEMPERATURE > 0:
@@ -85,8 +86,12 @@ class MCTS():
             else:
                 return 0
 
+        if not self.M[fen].visited:
+            self.M[fen].visited = True
+            self.M[fen].legal_moves = [str(move) for move in board.legal_moves]
+
         legal_move_vec = torch.zeros(POLICY_SIZE, dtype=torch.float32)
-        for move in board.legal_moves:
+        for move in self.M[fen].legal_moves:
             move_idx = POLICY_INDEX.index(str(move))
             legal_move_vec[move_idx] = 1
 
@@ -116,8 +121,7 @@ class MCTS():
         # output probabilities and the amount of times the move has been explored
 
         qu, selected_move = -torch.inf, None
-        for move in board.legal_moves:
-            move = str(move)
+        for move in self.M[fen].legal_moves:
             N_sum = 0
             for m in POLICY_INDEX:
                 N_sum += self.N[(fen, m)]

@@ -1,11 +1,8 @@
-import torch
 
+default_chess_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-x = torch.tensor([0.1, 0, 0, 0.3, 0, 0, 0.6, 0, 0, 0], dtype=torch.float32)
+from anz.helpers import flip_fen
 
-selections = [0 for _ in range(10)]
-for _ in range(10000):
-    s = torch.multinomial(x, 1)
-    selections[s] += 1
+#print(flip_fen(default_chess_fen))
 
-print([s / sum(selections) for s in selections])
+flip_fen(default_chess_fen)

@@ -4,9 +4,10 @@ from enum import Enum
 
 class InferenceType(Enum):
     UNKNOWN = 0
-    POLICY_ONLY = 1
-    VALUE_ONLY = 2
-    MCTS = 3
+    RAW = 1
+    POLICY_ONLY = 2
+    VALUE_ONLY = 3
+    MCTS = 4
 
 @dataclass
 class InferenceResult:
