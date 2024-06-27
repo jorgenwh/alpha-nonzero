@@ -1,0 +1,14 @@
+.ChessboardPanel {
+    min-width: 65vw;
+    max-width: 65vw;
+    margin: 0 0 0 .75em;
+}
+
+.MaterialDifferenceLabel {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: .5em auto auto .5em;
+    text-align: left;
+}

@@ -1,0 +1,65 @@
+.AnatomyPanel {
+    min-width: 35vw;
+    max-width: 35vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.AnatomyPanelTitle {
+    font-size: 1.5em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+}
+
+.EvaluateButton {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: .15em auto .15em 1em;
+    padding: .1em;
+}
+
+.ValueIndicator {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: 1em auto 0 1.25em;
+}
+
+.PolicyIndicatorTitle {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: 1em auto 0 1.25em;
+}
+
+.PolicyIndicator {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: 1em auto 0 1.25em;
+    display: flex;
+    flex-direction: row;
+}
+
+.PolicyIndicatorMoveList {
+    display: flex;
+    flex-direction: column;
+}
+
+.PolicyIndicatorValueList {
+    display: flex;
+    flex-direction: column;
+}
+
+.PolicyIndicatorMove {
+}
+
+.PolicyIndicatorValue {
+    margin: 0 0 0 1em;
+}
+

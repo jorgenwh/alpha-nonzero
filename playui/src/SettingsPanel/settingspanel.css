@@ -1,0 +1,111 @@
+.SettingsPanel {
+    display: flex;
+    flex-direction: column;
+    margin: 2em 0 .5em .75em;
+}
+.SettingsPanelTitle {
+
+}
+
+
+.MainSettingsContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.PlayAsContainer {
+    display: flex;
+    flex-direction: row;
+    text-align: left;
+}
+.PlayAsLabelsContainer {
+    display: flex;
+    flex-direction: column;
+    margin: auto 0 .5em 0;
+}
+.PlayAsCheckboxContainer {
+    display: flex;
+    flex-direction: column;
+    margin: auto auto .5em .75em;
+}
+.PlayAsWhiteLabel {
+    font-size: 1.3em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+}
+.PlayAsBlackLabel {
+    font-size: 1.3em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+}
+.PlayAsWhiteCheckbox {
+    transform: scale(1.4);
+    margin: auto auto .8em auto;
+}
+.PlayAsBlackCheckbox {
+    transform: scale(1.4);
+    margin: auto auto .5em auto;
+}
+
+
+.RolloutsInputContainer {
+    display: flex;
+    flex-direction: row;
+}
+.RolloutsLabel {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+    margin: .2em 0 0 0;
+}
+.RolloutsInput {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+    margin: auto auto .25em .75em;
+    max-width: 4em;
+    min-width: 4em;
+}
+
+
+.FenAndButtonsContainer {
+    display: flex;
+    flex-direction: row;
+    min-width: 100vw;
+    max-width: 100vw;
+}
+.FenInput {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    min-width: 75vw;
+    max-width: 75vw;
+    padding: .05em .25em;
+    margin: .15em auto .15em 1em;;
+}
+.FlipButton {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: .15em 0 .15em 0;
+    padding: .1em;
+}
+.PopMoveButton {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: .15em 0 .15em .5em;;
+    padding: .1em;
+}
+.ResetGameButton {
+    font-size: 1.25em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+
+    margin: .15em 0 .15em .5em;;
+    padding: .1em;
+}

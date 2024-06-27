@@ -14,6 +14,7 @@ class InferenceResult:
     fen: str
     move: Union[str, None]
     value: Union[float, None]
+    top5: Union[list, None]
     inference_type: InferenceType
     mcts_rollouts: Union[int, None]
 
