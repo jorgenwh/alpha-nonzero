@@ -77,17 +77,21 @@ def load_model(model_path: str, model_type: str) -> torch.nn.Module:
 def flip_fen(fen: str) -> str:
     board = chess.Board(fen)
     castling_fen = ""
-    if board.has_kingside_castling_rights(chess.WHITE):
-        castling_fen += "k"
-    if board.has_queenside_castling_rights(chess.WHITE):
-        castling_fen += "q"
     if board.has_kingside_castling_rights(chess.BLACK):
         castling_fen += "K"
     if board.has_queenside_castling_rights(chess.BLACK):
         castling_fen += "Q"
+    if board.has_kingside_castling_rights(chess.WHITE):
+        castling_fen += "k"
+    if board.has_queenside_castling_rights(chess.WHITE):
+        castling_fen += "q"
+    if castling_fen == "":
+        castling_fen = "-"
     board = board.mirror().transform(chess.flip_horizontal)
-    board.set_castling_fen(castling_fen)
-    return board.fen()
+    flipped_fen_no_castling_rights = board.fen()
+    before_castling_rights = flipped_fen_no_castling_rights.split(" ")[:2]
+    after_castling_rights = flipped_fen_no_castling_rights.split(" ")[3:]
+    return " ".join(before_castling_rights) + " " + castling_fen + " " + " ".join(after_castling_rights)
 
 def flip_fen_if_black_turn(fen: str) -> str:
     board = chess.Board(fen)
@@ -111,11 +115,19 @@ def flip_chess_move(move: str) -> str:
 
 def flip_inference_result(result: InferenceResult) -> InferenceResult:
     flipped_result = InferenceResult(
-        fen=flip_fen(result.fen), move=None, value=None, inference_type=result.inference_type, mcts_rollouts=result.mcts_rollouts) 
+        fen=flip_fen(result.fen), 
+        move=None, 
+        value=None, 
+        top5=None, 
+        inference_type=result.inference_type, 
+        mcts_rollouts=result.mcts_rollouts
+    ) 
     if result.move is not None:
         flipped_result.move = flip_chess_move(result.move)
     if result.value is not None:
         flipped_result.value = -result.value
+    if result.top5 is not None:
+        flipped_result.top5 = [(flip_chess_move(move), value) for move, value in result.top5]
     return flipped_result
 
 def allocate_zero_tensor(size: Union[int, Tuple], dtype: torch.dtype) -> torch.Tensor:
@@ -258,8 +270,10 @@ def move2vec(move: str) -> torch.Tensor:
     return vec
 
 def model_forward_pass(model: torch.nn.Module, model_type: str, fen: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    model.eval()
     fen_vec = fen2vec(fen, model_type).unsqueeze(0).to(DEVICE)
-    pi, v = model(fen_vec)
+    with torch.no_grad():
+        pi, v = model(fen_vec)
     return pi, v
 
 

@@ -29,13 +29,13 @@ def run_value_head_policy_inference(model: torch.nn.Module, model_type: str, fen
         board.pop()
 
     return InferenceResult(
-        fen=fen, move=best_move, value=None, inference_type=InferenceType.VALUE_ONLY, mcts_rollouts=None)
+        fen=fen, move=best_move, top5=None, value=None, inference_type=InferenceType.VALUE_ONLY, mcts_rollouts=None)
 
 def run_policy_head_policy_inference(model: torch.nn.Module, model_type: str, fen: str) -> InferenceResult:
     pi, _ = model_forward_pass(model, model_type, fen)
     move = policy_vec_to_move(pi)
     return InferenceResult(
-        fen=fen, move=move, value=None, inference_type=InferenceType.POLICY_ONLY, mcts_rollouts=None)
+        fen=fen, move=move, value=None, top5=None, inference_type=InferenceType.POLICY_ONLY, mcts_rollouts=None)
 
 def run_mcts_policy_inference(
         model: torch.nn.Module, 
@@ -53,7 +53,7 @@ def run_raw_inference(model: torch.nn.Module, model_type: str, fen: str) -> Infe
     move = policy_vec_to_move(pi)
     value = v.item()
     return InferenceResult(
-        fen=fen, move=move, value=value, inference_type=InferenceType.RAW, mcts_rollouts=None)
+        fen=fen, move=move, value=value, top5=None, inference_type=InferenceType.RAW, mcts_rollouts=None)
 
 def run_inference(
         model: Union[torch.nn.Module, str], 

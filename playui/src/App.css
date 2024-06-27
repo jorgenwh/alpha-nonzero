@@ -1,0 +1,22 @@
+.App {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.SettingsPanelContainer {
+    display: flex;
+    flex-direction: row;
+}
+
+.ChessboardPanelAnatomyPanelContainer {
+    display: flex;
+    flex-direction: row;
+}
+
+.Footer {
+    font-size: 1.5em;
+    font-family: 'Ubuntu';
+    font-weight: 300;
+    margin: 1em auto;
+}

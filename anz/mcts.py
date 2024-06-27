@@ -15,12 +15,11 @@ from .constants import (
     POLICY_SIZE
 )
 
+
 @dataclass
 class NodeCache:
     visited = False
     legal_moves = []
-    v = None
-    pi = None
 
 
 class MCTS():
@@ -42,15 +41,17 @@ class MCTS():
         self.model.eval()
         canonical_fen = flip_fen_if_black_turn(fen)
         inference_result = InferenceResult(
-            canonical_fen, None, None, inference_type=InferenceType.MCTS, mcts_rollouts=rollouts)
+            canonical_fen, None, None, None, inference_type=InferenceType.MCTS, mcts_rollouts=rollouts)
 
         it = range(rollouts)
         if verbose:
             print(f"Running MCTS with {rollouts} rollouts on FEN '{fen}'")
             it = tqdm(range(rollouts), desc="MCTS simulations", bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - elapsed: {elapsed}")
 
+        value = 0
         for _ in it:
-            self.leaf_rollout(canonical_fen)
+            value = self.leaf_rollout(canonical_fen)
+        inference_result.value = -value
 
         raw_pi = [self.N[(canonical_fen, move)] for move in POLICY_INDEX]
 
@@ -64,6 +65,16 @@ class MCTS():
         else:
             move_idx = raw_pi.index(max(raw_pi))
 
+        pi = [N / sum(raw_pi) for N in raw_pi]
+
+        # get top5 moves
+        top5 = sorted(range(len(pi)), key=lambda i: pi[i], reverse=True)[:5]
+        top5_moves = [POLICY_INDEX[i] for i in top5]
+        top5_values = [pi[i] for i in top5]
+        top5 = list(zip(top5_moves, top5_values))
+        inference_result.top5 = top5
+
+        # get the best move
         move = POLICY_INDEX[move_idx]
         inference_result.move = move
 
