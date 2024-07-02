@@ -4,6 +4,7 @@ from pytorch_model_summary import summary
 
 from anz.constants import VOCAB_SIZE, BLOCK_SIZE, BATCH_SIZE, DEVICE
 from anz.models import Transformer
+from anz.helpers import get_torch_model_size
 
 if __name__ == '__main__':
     print(f"VOCAB_SIZE={VOCAB_SIZE}\nBLOCK_SIZE={BLOCK_SIZE}\nBATCH_SIZE={BATCH_SIZE}")
@@ -20,3 +21,5 @@ if __name__ == '__main__':
 
     print(summary(model, x))
 
+    model_size = get_torch_model_size(model)
+    print(f"Model size: {round(model_size / 1e9, 3)} GB")

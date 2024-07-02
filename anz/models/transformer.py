@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..constants import D_MODEL, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, DEVICE
+from ..constants import D_MODEL, D_OUTPUT, N_HEADS, N_LAYERS, VOCAB_SIZE, BLOCK_SIZE, POLICY_SIZE, DEVICE
 
 
 class Attention(nn.Module):
@@ -74,11 +74,11 @@ class Transformer(nn.Module):
 
         self.ln = nn.LayerNorm(D_MODEL)
 
-        self.v_fc = nn.Linear(D_MODEL, 512)
-        self.v = nn.Linear(512, 1)
+        self.v_fc = nn.Linear(D_MODEL, D_OUTPUT)
+        self.v = nn.Linear(D_OUTPUT, 1)
 
-        self.pi_fc = nn.Linear(D_MODEL, 512)
-        self.pi = nn.Linear(512, POLICY_SIZE)
+        self.pi_fc = nn.Linear(D_MODEL, D_OUTPUT)
+        self.pi = nn.Linear(D_OUTPUT, POLICY_SIZE)
 
     def forward(self, x):
         B, _ = x.shape

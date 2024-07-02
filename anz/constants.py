@@ -22,7 +22,8 @@ DEFAULT_MCTS_ROLLOUTS = 40
 # --- Transformer settings ---
 VOCAB_SIZE            = len(VOCAB)
 BLOCK_SIZE            = 76
-D_MODEL               = 256
+D_MODEL               = 512
+D_OUTPUT              = 1028
 N_HEADS               = 8
 N_LAYERS              = 8
 
@@ -31,10 +32,10 @@ N_BLOCKS              = 6
 
 # --- Training settings ---
 EPOCHS                = 100
-BATCH_SIZE            = 256
+BATCH_SIZE            = 128
 LEARNING_RATE         = 0.001
-DEVICE                = "cuda" if torch.cuda.is_available() else "cpu"
+USE_CUDA              = True
 
 # --- Misc ---
 CHAR_TO_IDX           = {c:i for i, c in enumerate(VOCAB)}
-
+DEVICE                = "cuda" if torch.cuda.is_available() and USE_CUDA else "cpu"

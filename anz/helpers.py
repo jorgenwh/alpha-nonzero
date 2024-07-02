@@ -276,6 +276,18 @@ def model_forward_pass(model: torch.nn.Module, model_type: str, fen: str) -> Tup
         pi, v = model(fen_vec)
     return pi, v
 
+def get_torch_model_size(model: torch.nn.Module) -> int:
+    # Thank you to ptrblck
+    param_size = 0
+    for param in model.parameters():
+        param_size += param.numel() * param.element_size()
+
+    buffer_size = 0
+    for buffer in model.buffers():
+        buffer_size += buffer.numel() * buffer.element_size()
+
+    return param_size + buffer_size
+
 
 class AverageMeter():
     def __init__(self):
