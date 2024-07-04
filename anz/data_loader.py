@@ -26,7 +26,7 @@ class AlphaZeroDataset(Dataset):
         assert len(self.fens) == len(self.moves) == len(self.values)
         assert model_type in MODEL_TYPES, f"model_type must be one of {MODEL_TYPES}, not '{model_type}'"
         if use_fp16:
-            assert self.values.dtype == torch.float16, f"Dataset dtype does not match value dtype: {self.values.dtype}"
+            assert self.values.dtype == torch.bfloat16, f"Dataset dtype does not match value dtype: {self.values.dtype}"
 
     def __len__(self):
         return len(self.fens) // BATCH_SIZE
@@ -67,7 +67,7 @@ def get_dataset(
 
     fens = []
     moves = allocate_zero_tensor(size, torch.int64)
-    values = allocate_zero_tensor(size, torch.float16 if use_fp16 else torch.float32)
+    values = allocate_zero_tensor(size, torch.bfloat16 if use_fp16 else torch.float32)
 
     with open(fn, "rb") as in_fp:
         i = 0

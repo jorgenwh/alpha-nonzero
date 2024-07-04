@@ -9,7 +9,7 @@ from .constants import *
 
 
 DTYPE_BYTE_SIZES = {
-    torch.float16   : 2,
+    torch.bfloat16   : 2,
     torch.float32   : 4,
     torch.int64     : 8
 }
@@ -207,7 +207,7 @@ def fens2vec_transformer(fens: List[str]) -> torch.Tensor:
 
 def fens2vec_resnet(fens: List[str], fp16: bool = False) -> torch.Tensor:
     size = (len(fens), BOARD_CONV_CHANNELS, 8, 8)
-    dtype = torch.float16 if fp16 else torch.float32
+    dtype = torch.bfloat16 if fp16 else torch.float32
     vec = allocate_zero_tensor(size, dtype)
 
     for i, fen in enumerate(fens):

@@ -22,7 +22,7 @@ DEFAULT_MCTS_ROLLOUTS = 40
 # --- Transformer settings ---
 VOCAB_SIZE            = len(VOCAB)
 BLOCK_SIZE            = 76
-D_MODEL               = 256
+D_MODEL               = 512
 D_OUTPUT              = 1028
 N_HEADS               = 8
 N_LAYERS              = 8
@@ -31,8 +31,8 @@ N_LAYERS              = 8
 N_BLOCKS              = 6
 
 # --- Training settings ---
-EPOCHS                = 1
-BATCH_SIZE            = 256
+EPOCHS                = 100
+BATCH_SIZE            = 2048
 LEARNING_RATE         = 0.001
 USE_CUDA              = True
 
