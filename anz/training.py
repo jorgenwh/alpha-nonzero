@@ -50,7 +50,14 @@ def train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16: 
             if i % 1000 == 0:
                 torch.save(model.state_dict(), f"{output_dir}/{model_type}_checkpoint_epoch{epoch}_iter{i}.pth")
 
-def train(data_fn: str, model_type: str, output_dir: str, max_datapoints: Union[int, None], use_fp16: bool):
+def train(
+        data_fn: str, 
+        model_type: str, 
+        output_dir: str, 
+        max_datapoints: Union[int, None], 
+        use_fp16: bool, 
+        compile_model: bool = False
+):
     if model_type == "transformer":
         model = Transformer().to(DEVICE)
     elif model_type == "resnet":
@@ -60,5 +67,8 @@ def train(data_fn: str, model_type: str, output_dir: str, max_datapoints: Union[
 
     optimizer = torch.optim.Adam(model.parameters())
     data_loader = get_data_loader(data_fn, model_type, max_datapoints, use_fp16)
+
+    if compile_model:
+        model = torch.compile(model)
 
     train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16)
