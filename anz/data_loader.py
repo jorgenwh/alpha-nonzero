@@ -3,33 +3,51 @@ import pickle
 import chess
 import torch
 from torch.utils.data import Dataset, DataLoader
-from typing import Union
+from typing import Union, List
 
-from .constants import BATCH_SIZE
-from .helpers import MODEL_TYPES, fen2vec, move2vec, allocate_zero_tensor, flip_chess_move
+from .constants import BATCH_SIZE, POLICY_INDEX
+from .helpers import MODEL_TYPES, fens2vec, allocate_zero_tensor, flip_chess_move
 
 
 class AlphaZeroDataset(Dataset):
-    def __init__(self, fens: list, moves: list, values: list, model_type: str):
+    def __init__(self, 
+                 fens: List[str],
+                 moves: torch.Tensor, 
+                 values: torch.Tensor, 
+                 model_type: str, 
+                 use_fp16: bool = False
+    ):
         self.fens = fens
         self.moves = moves
         self.values = values
         self.model_type = model_type
+        self.use_fp16 = use_fp16
+
         assert len(self.fens) == len(self.moves) == len(self.values)
         assert model_type in MODEL_TYPES, f"model_type must be one of {MODEL_TYPES}, not '{model_type}'"
+        if use_fp16:
+            assert self.values.dtype == torch.float16, f"Dataset dtype does not match value dtype: {self.values.dtype}"
 
     def __len__(self):
-        return len(self.fens)
+        return len(self.fens) // BATCH_SIZE
 
     def __getitem__(self, index):
-        position = fen2vec(self.fens[index], self.model_type)
-        pi = move2vec(self.moves[index])
-        v = allocate_zero_tensor((1), torch.float32)
-        v[0] = self.values[index]
-        return position, pi, v
+        i0 = index * BATCH_SIZE
+        i1 = i0 + BATCH_SIZE
+    
+        positions = fens2vec(self.fens[i0:i1], self.model_type, self.use_fp16)
+        pis = self.moves[i0:i1]
+        vs = self.values[i0:i1]
+
+        return positions, pis, vs
 
 
-def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> AlphaZeroDataset:
+def get_dataset(
+        fn: str, 
+        model_type: str, 
+        max_datapoints: Union[int, None], 
+        use_fp16: bool = False
+) -> AlphaZeroDataset:
     assert os.path.isfile(fn), f"File not found: {fn}"
 
     size = 0
@@ -48,11 +66,11 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
         size = max_datapoints
 
     fens = []
-    moves = []
-    values = []
+    moves = allocate_zero_tensor(size, torch.int64)
+    values = allocate_zero_tensor(size, torch.float16 if use_fp16 else torch.float32)
 
     with open(fn, "rb") as in_fp:
-        i = 1
+        i = 0
         while 1:
             if i % 1000 == 0:
                 print(f"Reading datapoint {i:,}/{size:,}", end="\r", flush=True)
@@ -66,8 +84,8 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
                     value = -value
 
                 fens.append(fen)
-                moves.append(move)
-                values.append(value)
+                moves[i] = POLICY_INDEX.index(move)
+                values[i] = value
                 i += 1
 
                 if i >= size:
@@ -83,8 +101,8 @@ def get_dataset(fn: str, model_type: str, max_datapoints: Union[int, None]) -> A
 
     return AlphaZeroDataset(fens, moves, values, model_type)
 
-def get_data_loader(fn: str, model_type: str, max_datapoints: Union[int, None]) -> DataLoader:
-    dataset = get_dataset(fn, model_type, max_datapoints)
-    data_loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+def get_data_loader(fn: str, model_type: str, max_datapoints: Union[int, None], use_fp16: bool = False) -> DataLoader:
+    dataset = get_dataset(fn, model_type, max_datapoints, use_fp16)
+    data_loader = DataLoader(dataset)
     return data_loader
 

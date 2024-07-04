@@ -33,12 +33,19 @@ if __name__ == "__main__":
         default=None,
         help="Limit on the number of datapoints loaded from the training data file",
     )
+    arg_parser.add_argument(
+        "--fp16",
+        action="store_true",
+        help="Use half precision",
+        required=False
+    )
     args = arg_parser.parse_args()
 
     data_fn = args.d
     model_type = args.mt
     output_dir = args.o
     max_datapoints = args.md
+    use_fp16 = args.fp16
 
     assert os.path.isfile(data_fn), f"File not found: {data_fn}"
     assert max_datapoints is None or max_datapoints > 0, f"Invalid value for max_datapoints: {max_datapoints}"
@@ -46,4 +53,4 @@ if __name__ == "__main__":
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
-    train(data_fn, model_type, output_dir, max_datapoints)
+    train(data_fn, model_type, output_dir, max_datapoints, use_fp16)

@@ -3,7 +3,7 @@ import os
 import pickle
 
 def check_pickle_size(input_fn):
-    print("Counting datapoints in pickle file...")
+    print("Counting datapoints in pickle file...", end="\r", flush=True)
     num_dp = 0
     with open(input_fn, "rb") as f:
         while 1:
