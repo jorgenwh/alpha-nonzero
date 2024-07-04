@@ -59,7 +59,12 @@ def train_loop(
             loss.backward()
             optimizer.step()
 
-        torch.save(model.state_dict(), f"{output_dir}/{model_type}_checkpoint_epoch{epoch}.pth")
+        checkpoint = {
+            "model": model.state_dict(),
+            "epoch": epoch,
+            "epoch_loss": epoch_loss.avg
+        }
+        torch.save(checkpoint, f"{output_dir}/{model_type}_checkpoint_epoch{epoch}.pth")
 
 def train(
         data_fn: str, 
