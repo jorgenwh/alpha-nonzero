@@ -20,7 +20,9 @@ def train_loop(
     v_loss_fn = torch.nn.MSELoss()
     model.train()
 
-    print("fp16:", use_fp16, "compile_model:", compile_model, "device:", DEVICE)
+    print("fp16:", use_fp16)
+    print("compile_model:", compile_model)
+    print("device:", DEVICE)
 
     if compile_model:
         model = torch.compile(model)
