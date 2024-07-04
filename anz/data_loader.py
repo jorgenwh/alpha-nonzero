@@ -60,7 +60,8 @@ def get_dataset(
                     break
                 except Exception as e:
                     print(f"Error while reading file '{fn}': {e}")
-                    exit(1)
+                    #exit(1)
+                    continue
                 size += 1
     else:
         size = max_datapoints
@@ -74,28 +75,30 @@ def get_dataset(
         while 1:
             if i % 1000 == 0:
                 print(f"Reading datapoint {i:,}/{size:,}", end="\r", flush=True)
+
             try:
                 fen, move, value = pickle.load(in_fp)
-                fen = fen.strip()
-                board = chess.Board(fen)
-                if not board.turn:
-                    fen = board.mirror().transform(chess.flip_horizontal).fen()
-                    move = flip_chess_move(move)
-                    value = -value
-
-                fens.append(fen)
-                moves[i] = POLICY_INDEX.index(move)
-                values[i] = value
-                i += 1
-
-                if i >= size:
-                    break
-
             except EOFError:
                 break
             except Exception as e:
                 print(f"Error while reading file '{fn}': {e}")
-                exit(1)
+                #exit(1)
+                continue
+
+            fen = fen.strip()
+            board = chess.Board(fen)
+            if not board.turn:
+                fen = board.mirror().transform(chess.flip_horizontal).fen()
+                move = flip_chess_move(move)
+                value = -value
+
+            fens.append(fen)
+            moves[i] = POLICY_INDEX.index(move)
+            values[i] = value
+            i += 1
+
+            if i >= size:
+                break
 
         print(f"Reading datapoint {i:,}/{size:,}")
 
