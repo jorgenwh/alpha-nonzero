@@ -70,7 +70,7 @@ def train_loop(
                     "epoch_loss": epoch_loss.avg,
                     "updates": i
                 }
-                torch.save(checkpoint, f"{output_dir}/{model_type}_checkpoint_epoch{epoch}.pth")
+                torch.save(checkpoint, f"{output_dir}/{model_type}_checkpoint_iter{i}.pth")
 
 def train(
         data_fn: str, 
