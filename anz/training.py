@@ -27,6 +27,7 @@ def train_loop(
     if compile_model:
         model = torch.compile(model)
 
+    i = 0
     for epoch in range(EPOCHS):
         print(f"Epoch: {epoch+1}/{EPOCHS}")
 
@@ -61,12 +62,15 @@ def train_loop(
             loss.backward()
             optimizer.step()
 
-        checkpoint = {
-            "model": model.state_dict(),
-            "epoch": epoch,
-            "epoch_loss": epoch_loss.avg
-        }
-        torch.save(checkpoint, f"{output_dir}/{model_type}_checkpoint_epoch{epoch}.pth")
+            i += 1
+            if i % 5000 == 0:
+                checkpoint = {
+                    "model_state_dict": model.state_dict(),
+                    "epoch": epoch,
+                    "epoch_loss": epoch_loss.avg,
+                    "updates": i
+                }
+                torch.save(checkpoint, f"{output_dir}/{model_type}_checkpoint_epoch{epoch}.pth")
 
 def train(
         data_fn: str, 
