@@ -1,14 +1,15 @@
 import psutil
 import chess
 import torch
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 from .models import Transformer, ResNet
-from .constants import BLOCK_SIZE, BOARD_CONV_CHANNELS, CHAR_TO_IDX, POLICY_SIZE, POLICY_INDEX, DEVICE
 from .types import InferenceResult
+from .constants import *
 
 
 DTYPE_BYTE_SIZES = {
+    torch.float16   : 2,
     torch.float32   : 4,
     torch.int64     : 8
 }
@@ -130,7 +131,10 @@ def flip_inference_result(result: InferenceResult) -> InferenceResult:
         flipped_result.top5 = [(flip_chess_move(move), value) for move, value in result.top5]
     return flipped_result
 
-def allocate_zero_tensor(size: Union[int, Tuple], dtype: torch.dtype) -> torch.Tensor:
+def allocate_zero_tensor(
+        size: Union[int, Tuple], 
+        dtype: torch.dtype
+) -> torch.Tensor:
     available_bytes = psutil.virtual_memory().available
     needed_bytes = DTYPE_BYTE_SIZES[dtype]
     if isinstance(size, int):
@@ -144,134 +148,114 @@ def allocate_zero_tensor(size: Union[int, Tuple], dtype: torch.dtype) -> torch.T
 
     return torch.zeros(size, dtype=dtype)
 
+def fens2vec_transformer(fens: List[str]) -> torch.Tensor:
+    vec = allocate_zero_tensor((len(fens), BLOCK_SIZE), torch.int64)
 
-def fen_to_fixed_length_fen(fen: str) -> str:
-    # ----------------------------------------------------------
-    # Fixed-length fen description:
+    for i, fen in enumerate(fens):
+        board = chess.Board(fen)
 
-    # 64  square/piece tokens
-    # 1   turn token
-    # 4   castling tokens
-    # 2   en passant tokens
-    # 2   halfmove clock tokens
-    # 3   fullmove clock tokens
+        for j, square in enumerate(chess.SQUARES):
+            piece = board.piece_at(square)
+            if piece is not None:
+                vec[i, j] = CHAR_TO_IDX[str(piece)]
+            else:
+                vec[i, j] = EMPTY_TOKEN
 
-    # 64 + 1 + 4 + 2 + 2 + 3 = 76
-    # Why does Google DeepMind say 77 in their paper? ¯\_(ツ)_/¯
-    # ----------------------------------------------------------
-    flfen = ""
+        turn = "w" if board.turn else "b"
+        vec[i, 64] = WL_TOKEN if turn else BL_TOKEN
 
-    board = chess.Board(fen)
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece is not None:
-            flfen += str(piece)
+        vec[i, 65] = KU_TOKEN if board.has_kingside_castling_rights(chess.WHITE) else EMPTY_TOKEN
+        vec[i, 66] = QU_TOKEN if board.has_queenside_castling_rights(chess.WHITE) else EMPTY_TOKEN
+        vec[i, 67] = KL_TOKEN if board.has_kingside_castling_rights(chess.BLACK) else EMPTY_TOKEN
+        vec[i, 68] = QL_TOKEN if board.has_queenside_castling_rights(chess.BLACK) else EMPTY_TOKEN
+
+        ep_sq = board.ep_square
+        if ep_sq is not None:
+            sq = chess.SQUARE_NAMES[ep_sq]
+            vec[i, 69] = CHAR_TO_IDX[sq[0]]
+            vec[i, 70] = CHAR_TO_IDX[sq[1]]
         else:
-            flfen += "."
+            vec[i, 69:71] = EMPTY_TOKEN
 
-    turn = "w" if board.turn else "b"
-    flfen += turn
+        halfmove_clock = str(board.halfmove_clock)
+        if len(halfmove_clock) == 1:
+            vec[i, 71] = EMPTY_TOKEN
+            vec[i, 72] = CHAR_TO_IDX[halfmove_clock]
+        elif len(halfmove_clock) == 2:
+            vec[i, 71] = CHAR_TO_IDX[halfmove_clock[0]]
+            vec[i, 72] = CHAR_TO_IDX[halfmove_clock[1]]
+        else:
+            raise ValueError(f"halfmove clock is not 1 or 2 digits long. fen: {fen}")
 
-    white_kingside_castling = "K" if board.has_kingside_castling_rights(chess.WHITE) else "."
-    white_queenside_castling = "Q" if board.has_queenside_castling_rights(chess.WHITE) else "."
-    black_kingside_castling = "k" if board.has_kingside_castling_rights(chess.BLACK) else "."
-    black_queenside_castling = "q" if board.has_queenside_castling_rights(chess.BLACK) else "."
-    castling = white_kingside_castling + white_queenside_castling + black_kingside_castling + black_queenside_castling
-    flfen += castling
-
-    ep_sq = board.ep_square
-    if ep_sq is not None:
-        flfen += chess.SQUARE_NAMES[ep_sq]
-    else:
-        flfen += ".."
-
-    halfmove_clock = str(board.halfmove_clock)
-    if len(halfmove_clock) == 1:
-        flfen += "." + halfmove_clock
-    elif len(halfmove_clock) == 2:
-        flfen += halfmove_clock
-    else:
-        raise ValueError(f"halfmove clock is not 1 or 2 digits long. fen: {fen}")
-
-    fullmove_clock = str(board.fullmove_number)
-    if len(fullmove_clock) == 1:
-        flfen += ".." + fullmove_clock
-    elif len(fullmove_clock) == 2:
-        flfen += "." + fullmove_clock
-    elif len(fullmove_clock) == 3:
-        flfen += fullmove_clock
-    else:
-        raise ValueError("fullmove clock is not 1, 2 or 3 digits long")
-
-    assert len(flfen) == 76, f"fixed-length fen is not 76 characters long: {flfen}"
-    return flfen
-
-def fen2vec_transformer(fen: str) -> torch.Tensor:
-    vec = allocate_zero_tensor((BLOCK_SIZE), torch.int64)
-    flfen = fen_to_fixed_length_fen(fen)
-
-    for i, c in enumerate(flfen):
-        vec[i] = CHAR_TO_IDX[c]
+        fullmove_clock = str(board.fullmove_number)
+        if len(fullmove_clock) == 1:
+            vec[i, 73] = EMPTY_TOKEN
+            vec[i, 74] = EMPTY_TOKEN
+            vec[i, 75] = CHAR_TO_IDX[fullmove_clock]
+        elif len(fullmove_clock) == 2:
+            vec[i, 73] = EMPTY_TOKEN
+            vec[i, 74] = CHAR_TO_IDX[fullmove_clock[0]]
+            vec[i, 75] = CHAR_TO_IDX[fullmove_clock[1]]
+        elif len(fullmove_clock) == 3:
+            vec[i, 73] = CHAR_TO_IDX[fullmove_clock[0]]
+            vec[i, 74] = CHAR_TO_IDX[fullmove_clock[1]]
+            vec[i, 75] = CHAR_TO_IDX[fullmove_clock[2]]
+        else:
+            raise ValueError("fullmove clock is not 1, 2 or 3 digits long")
 
     return vec
 
-def fen2vec_resnet(fen: str) -> torch.Tensor:
-    vec = allocate_zero_tensor((BOARD_CONV_CHANNELS, 8, 8), torch.float32)
-    board = chess.Board(fen)
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        
-        if piece is None:
-            continue
+def fens2vec_resnet(fens: List[str], fp16: bool = False) -> torch.Tensor:
+    size = (len(fens), BOARD_CONV_CHANNELS, 8, 8)
+    dtype = torch.float16 if fp16 else torch.float32
+    vec = allocate_zero_tensor(size, dtype)
 
-        channel = PIECE_TO_BOARD_CHANNEL[str(piece)]
-        rank = square % 8
-        file = square // 8
+    for i, fen in enumerate(fens):
+        board = chess.Board(fen)
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece is None:
+                continue
 
-        vec[channel, file, rank] = 1
+            channel = PIECE_TO_BOARD_CHANNEL[str(piece)]
+            rank = square % 8
+            file = square // 8
 
-    if board.has_kingside_castling_rights(chess.WHITE):
-        vec[W_KINGSIDE_CASTLING_BOARD_CHANNEL, :, :] = 1
-    if board.has_queenside_castling_rights(chess.WHITE):
-        vec[W_QUEENSIDE_CASTLING_BOARD_CHANNEL, :, :] = 1
-    if board.has_kingside_castling_rights(chess.BLACK):
-        vec[B_KINGSIDE_CASTLING_BOARD_CHANNEL, :, :] = 1
-    if board.has_queenside_castling_rights(chess.BLACK):
-        vec[B_QUEENSIDE_CASTLING_BOARD_CHANNEL, :, :] = 1
+            vec[i, channel, file, rank] = 1
 
-    ep_square = board.ep_square
-    if ep_square is not None:
-        file = ep_square // 8
-        rank = ep_square % 8
-        vec[EN_PASSANT_BOARD_CHANNEL, file, rank] = 1
+        vec[i, W_KINGSIDE_CASTLING_BOARD_CHANNEL, :, :] = int(board.has_kingside_castling_rights(chess.WHITE))
+        vec[i, W_QUEENSIDE_CASTLING_BOARD_CHANNEL, :, :] = int(board.has_queenside_castling_rights(chess.WHITE))
+        vec[i, B_KINGSIDE_CASTLING_BOARD_CHANNEL, :, :] = int(board.has_kingside_castling_rights(chess.BLACK))
+        vec[i, B_QUEENSIDE_CASTLING_BOARD_CHANNEL, :, :] = int(board.has_queenside_castling_rights(chess.BLACK))
 
-    halfmove_clock = board.halfmove_clock
-    fullmove_clock = board.fullmove_number
+        ep_square = board.ep_square
+        if ep_square is not None:
+            file = ep_square // 8
+            rank = ep_square % 8
+            vec[i, EN_PASSANT_BOARD_CHANNEL, file, rank] = 1
 
-    vec[HALFMOVE_CLOCK_BOARD_CHANNEL, :, :] = halfmove_clock
-    vec[FULLMOVE_CLOCK_BOARD_CHANNEL, :, :] = fullmove_clock
+        vec[i, HALFMOVE_CLOCK_BOARD_CHANNEL, :, :] = board.halfmove_clock
+        vec[i, FULLMOVE_CLOCK_BOARD_CHANNEL, :, :] = board.fullmove_number
 
     return vec
 
-def fen2vec(fen: str, model_type: str = "transformer") -> torch.Tensor:
+def fens2vec(fens: List[str], model_type: str = "transformer", fp16: bool = False) -> torch.Tensor:
     assert model_type in MODEL_TYPES, f"model_type must be one of {MODEL_TYPES}, not '{model_type}'"
 
     if model_type == "transformer":
-        return fen2vec_transformer(fen)
+        return fens2vec_transformer(fens)
     if model_type == "resnet":
-        return fen2vec_resnet(fen)
+        return fens2vec_resnet(fens, fp16)
 
     assert False, f"Invalid model_type: '{model_type}'"
 
-def move2vec(move: str) -> torch.Tensor:
-    index = POLICY_INDEX.index(move)
-    vec = allocate_zero_tensor((POLICY_SIZE), torch.float32)
-    vec[index] = 1
-    return vec
-
-def model_forward_pass(model: torch.nn.Module, model_type: str, fen: str) -> Tuple[torch.Tensor, torch.Tensor]:
+def model_forward_pass(
+        model: torch.nn.Module, 
+        model_type: str, 
+        fen: str
+) -> Tuple[torch.Tensor, torch.Tensor]:
     model.eval()
-    fen_vec = fen2vec(fen, model_type).unsqueeze(0).to(DEVICE)
+    fen_vec = fens2vec([fen], model_type, fp16=False).to(DEVICE)
     with torch.no_grad():
         pi, v = model(fen_vec)
     return pi, v
