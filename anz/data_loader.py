@@ -60,8 +60,8 @@ def get_dataset(
                     break
                 except Exception as e:
                     print(f"Error while reading file '{fn}': {e}")
-                    #exit(1)
-                    continue
+                    exit(1)
+
                 size += 1
     else:
         size = max_datapoints
@@ -82,8 +82,7 @@ def get_dataset(
                 break
             except Exception as e:
                 print(f"Error while reading file '{fn}': {e}")
-                #exit(1)
-                continue
+                exit(1)
 
             fen = fen.strip()
             board = chess.Board(fen)

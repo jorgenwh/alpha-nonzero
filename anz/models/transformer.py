@@ -28,7 +28,7 @@ class Attention(nn.Module):
         # Flash attention
         y = F.scaled_dot_product_attention(q, k, v, is_causal=False)
 
-        y = y.transpose(1, 2).reshape(B, L, D)
+        y = y.transpose(1, 2).view(B, L, D)
         y = self.c_proj(y)
 
         return y
@@ -71,7 +71,7 @@ class Transformer(nn.Module):
         super().__init__()
         self.input_embedding = nn.Embedding(VOCAB_SIZE, D_MODEL)
         self.positional_encoding = nn.Embedding(BLOCK_SIZE, D_MODEL)
-        self.positional_vector = torch.arange(0, BLOCK_SIZE, dtype=torch.int64, device=DEVICE).reshape(1, BLOCK_SIZE)
+        self.positional_vector = torch.arange(0, BLOCK_SIZE, dtype=torch.int64, device=DEVICE).view(1, BLOCK_SIZE)
 
         self.blocks = nn.Sequential(
             *[Block() for _ in range(N_LAYERS)]
@@ -98,7 +98,7 @@ class Transformer(nn.Module):
         x = self.ln(x)
 
         # get the last embedded prediction
-        x = x[:,-1,:].reshape(B, D_MODEL)
+        x = x[:,-1,:].view(B, D_MODEL)
 
         # forward pass for the policy head
         pi = self.pi_fc(x)

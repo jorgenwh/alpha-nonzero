@@ -7,11 +7,23 @@ from .helpers import AverageMeter
 from .data_loader import get_data_loader
 from .constants import EPOCHS, DEVICE
 
-def train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16: bool = False):
+def train_loop(
+        model, 
+        optimizer, 
+        data_loader, 
+        model_type, 
+        output_dir, 
+        use_fp16: bool = False, 
+        compile_model: bool = False
+) -> None:
     pi_loss_fn = torch.nn.CrossEntropyLoss()
     v_loss_fn = torch.nn.MSELoss()
     model.train()
-    print("bFP16 " + "enabled" if use_fp16 else "disabled")
+
+    print("fp16:", use_fp16, "compile_model:", compile_model, "device:", DEVICE)
+
+    if compile_model:
+        model = torch.compile(model)
 
     for epoch in range(EPOCHS):
         print(f"Epoch: {epoch+1}/{EPOCHS}")
@@ -25,12 +37,12 @@ def train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16: 
             desc="training", 
             bar_format="{l_bar}{bar}| update: {n_fmt}/{total_fmt} - {unit} - elapsed: {elapsed}"
         )
-        for i, (positions, pis, vs) in enumerate(bar):
+        for positions, pis, vs in bar:
             optimizer.zero_grad()
 
             positions = positions.squeeze().to(DEVICE)
             pis = pis.squeeze().to(DEVICE)
-            vs = vs.reshape(-1, 1).to(DEVICE)
+            vs = vs.view(-1, 1).to(DEVICE)
 
             with torch.autocast(device_type=DEVICE, dtype=torch.bfloat16 if use_fp16 else torch.float32):
                 pi, v = model(positions)
@@ -47,8 +59,7 @@ def train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16: 
             loss.backward()
             optimizer.step()
 
-            if i % 1000 == 0:
-                torch.save(model.state_dict(), f"{output_dir}/{model_type}_checkpoint_epoch{epoch}_iter{i}.pth")
+        torch.save(model.state_dict(), f"{output_dir}/{model_type}_checkpoint_epoch{epoch}.pth")
 
 def train(
         data_fn: str, 
@@ -68,7 +79,4 @@ def train(
     optimizer = torch.optim.Adam(model.parameters())
     data_loader = get_data_loader(data_fn, model_type, max_datapoints, use_fp16)
 
-    if compile_model:
-        model = torch.compile(model)
-
-    train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16)
+    train_loop(model, optimizer, data_loader, model_type, output_dir, use_fp16, compile_model)
