@@ -39,6 +39,12 @@ if __name__ == "__main__":
         help="Use half precision",
         required=False
     )
+    arg_parser.add_argument(
+        "--compile",
+        action="store_true",
+        help="Compile torch model for faster execution",
+        required=False
+    )
     args = arg_parser.parse_args()
 
     data_fn = args.d
@@ -46,6 +52,7 @@ if __name__ == "__main__":
     output_dir = args.o
     max_datapoints = args.md
     use_fp16 = args.fp16
+    compile_model = args.compile
 
     assert os.path.isfile(data_fn), f"File not found: {data_fn}"
     assert max_datapoints is None or max_datapoints > 0, f"Invalid value for max_datapoints: {max_datapoints}"
@@ -53,4 +60,4 @@ if __name__ == "__main__":
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
-    train(data_fn, model_type, output_dir, max_datapoints, use_fp16)
+    train(data_fn, model_type, output_dir, max_datapoints, use_fp16, compile_model)
