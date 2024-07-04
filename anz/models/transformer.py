@@ -13,20 +13,25 @@ class Attention(nn.Module):
     def forward(self, x):
         B, L, D = x.shape
 
-        q, k, v = self.c_attn(x).split(D_MODEL, dim=2)
-        q = k.reshape(B, L, N_HEADS, D // N_HEADS).transpose(1, 2)
-        k = k.reshape(B, L, N_HEADS, D // N_HEADS).transpose(1, 2)
-        v = k.reshape(B, L, N_HEADS, D // N_HEADS).transpose(1, 2)
+        qkv = self.c_attn(x)
+        q, k, v = qkv.split(D_MODEL, dim=2)
+        q = q.view(B, L, N_HEADS, D // N_HEADS).transpose(1, 2)
+        k = k.view(B, L, N_HEADS, D // N_HEADS).transpose(1, 2)
+        v = v.view(B, L, N_HEADS, D // N_HEADS).transpose(1, 2)
 
-        att = torch.matmul(q, k.transpose(2, 3))
-        att = att / (k.shape[-1] ** 0.5)
-        att = F.softmax(att, dim=3)
-        att = torch.matmul(att, v)
+        # Normal attention
+        # att = torch.matmul(q, k.transpose(2, 3))
+        # att = att / (k.shape[-1] ** 0.5)
+        # att = F.softmax(att, dim=3)
+        # y = torch.matmul(att, v)
 
-        att = att.transpose(1, 2).reshape(B, L, D)
+        # Flash attention
+        y = F.scaled_dot_product_attention(q, k, v, is_causal=False)
 
-        att = self.c_proj(att)
-        return att
+        y = y.transpose(1, 2).reshape(B, L, D)
+        y = self.c_proj(y)
+
+        return y
 
 
 class FeedForward(nn.Module):
