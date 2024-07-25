@@ -1,6 +1,8 @@
 import psutil
 import chess
 import torch
+import copy
+from collections import OrderedDict
 from typing import Union, Tuple, List
 
 from .models import Transformer, ResNet
@@ -69,9 +71,19 @@ def load_model(model_path: str, model_type: str) -> torch.nn.Module:
     assert model is not None, f"Model type {model_type} not supported"
 
     try:
-        model.load_state_dict(torch.load(model_path))
+        checkpoint = torch.load(model_path)
     except Exception as e:
-        raise Exception(f"Error loading model from {model_path}: {e}")
+        raise Exception(f"Error loading model data from {model_path}: {e}")
+
+    model_state_dict = checkpoint["model_state_dict"]
+    new_state_dict = OrderedDict()
+    for k, v in model_state_dict.items():
+        name = k
+        if name.startswith("_orig_mod."):
+            name = name[10:]
+        new_state_dict[name] = v
+
+    model.load_state_dict(new_state_dict)
 
     return model
 

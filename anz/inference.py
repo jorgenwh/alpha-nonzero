@@ -64,6 +64,7 @@ def run_inference(
         policy_only: bool,
         verbose: bool = False
 ) -> InferenceResult:
+     
     model = load_model(model, model_type).to(DEVICE) if isinstance(model, str) else model.to(DEVICE)
     corrected_fen = flip_fen_if_black_turn(fen)
 

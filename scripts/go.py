@@ -52,6 +52,12 @@ if __name__ == "__main__":
         help="Use only the policy head of the model to generate a direct policy",
         required=False
     )
+    arg_parser.add_argument(
+        "--cont",
+        action="store_true",
+        help="Continuously run inference on different FENs",
+        required=False
+    )
     args = arg_parser.parse_args()
 
     model_path = args.m
@@ -60,6 +66,7 @@ if __name__ == "__main__":
     mcts_rollouts = args.mcts_rollouts
     value_only = args.v
     policy_only = args.pi
+    continuous = args.cont
 
     assert os.path.exists(model_path), f"Model file '{model_path}' does not exist"
     assert model_type in ["transformer", "resnet"], f"Invalid model type: {model_type}"
@@ -68,6 +75,13 @@ if __name__ == "__main__":
     assert not ((value_only or policy_only) and (mcts_rollouts is not None)), "Cannot use --v or --pi flags with MCTS"
 
     verbose = True
-    inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=verbose)
-    print(inference_result)
+
+    if continuous:
+        while True:
+            fen = input("enter FEN: ")
+            inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=verbose)
+            print(inference_result)
+    else:
+        inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=verbose)
+        print(inference_result)
 

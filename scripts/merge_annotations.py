@@ -1,10 +1,9 @@
 import argparse
 import os
 import pickle
-from collections import deque
 
 
-def add_batch(observed_dp, data, batch_fn):
+def add_batch(observed_dp, file_ptr, batch_fn):
     duplicates = 0
     with open(batch_fn, "rb") as f:
         while 1:
@@ -16,19 +15,17 @@ def add_batch(observed_dp, data, batch_fn):
                 print(f"Unhandled error: {e}")
                 exit()
 
-            if dp in observed_dp:
+            dp_hash = hash(dp)
+
+            if dp_hash in observed_dp:
                 duplicates += 1
                 continue
 
-            observed_dp.add(dp)
-            data.append(dp)
+            observed_dp.add(dp_hash)
+            pickle.dump(dp, file_ptr)
+
 
     return duplicates
-
-def dump_data(data, output_fn):
-    with open(output_fn, "wb") as f:
-        for dp in data:
-            pickle.dump(dp, f)
 
 
 if __name__ == "__main__":
@@ -47,11 +44,13 @@ if __name__ == "__main__":
     assert len(batch_fns) > 0, f"No files found in '{input_dir}'"
 
     observed_fens = set()
-    data = deque()
+    file_ptr = open(output_fn, "wb")
 
     duplicates = 0
-    for fn in batch_fns:
-        duplicates = add_batch(observed_fens, data, fn)
+    for i, fn in enumerate(batch_fns):
+        print(f"Appending batch {i + 1}/{len(batch_fns)}: {fn}", end="\r", flush=True)
+        duplicates = add_batch(observed_fens, file_ptr, fn)
+    print(f"Appending batch {len(batch_fns)}/{len(batch_fns)}: Done!     ")
     print(f"Found {duplicates:,} duplicate FENs")
 
-    dump_data(data, output_fn)
+    file_ptr.close()

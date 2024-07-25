@@ -22,7 +22,7 @@ class Attention(nn.Module):
         # Flash attention
         y = F.scaled_dot_product_attention(q, k, v, is_causal=False)
 
-        y = y.transpose(1, 2).reshape(B, L, D)
+        y = y.transpose(1, 2).contiguous().view(B, L, D)
         y = self.c_proj(y)
 
         return y
