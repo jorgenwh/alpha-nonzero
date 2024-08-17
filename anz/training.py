@@ -3,7 +3,7 @@ import torch
 from tqdm import tqdm
 
 from .models import Transformer, ResNet
-from .helpers import AverageMeter
+from .helpers import AverageMeter, save_model
 from .data_loader import get_data_loader
 from .constants import EPOCHS, DEVICE
 
@@ -64,13 +64,12 @@ def train_loop(
 
             i += 1
             if i % 5000 == 0:
-                checkpoint = {
+                save_model({
                     "model_state_dict": model.state_dict(),
                     "epoch": epoch,
                     "epoch_loss": epoch_loss.avg,
                     "updates": i
-                }
-                torch.save(checkpoint, f"{output_dir}/{model_type}_checkpoint_iter{i}.pth")
+                }, output_dir)
 
 def train(
         data_fn: str, 

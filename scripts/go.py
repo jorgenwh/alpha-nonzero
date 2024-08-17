@@ -77,11 +77,11 @@ if __name__ == "__main__":
     verbose = True
 
     if continuous:
-        while True:
-            fen = input("enter FEN: ")
-            inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=verbose)
-            print(inference_result)
-    else:
+        fen = input("enter FEN: ")
+
+    while True:
         inference_result = run_inference(model_path, model_type, fen, mcts_rollouts, value_only, policy_only, verbose=verbose)
         print(inference_result)
 
+        if not continuous:
+            break

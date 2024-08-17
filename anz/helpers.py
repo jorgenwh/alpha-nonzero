@@ -1,7 +1,6 @@
 import psutil
 import chess
 import torch
-import copy
 from collections import OrderedDict
 from typing import Union, Tuple, List
 
@@ -86,6 +85,9 @@ def load_model(model_path: str, model_type: str) -> torch.nn.Module:
     model.load_state_dict(new_state_dict)
 
     return model
+
+def save_model(data: dict, model_path: str) -> None:
+    torch.save(data, model_path)
 
 def flip_fen(fen: str) -> str:
     board = chess.Board(fen)
